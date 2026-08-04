@@ -52,9 +52,9 @@ end
 local customAsset = getcustomasset or getsynasset
 
 local Theme = {
-    Accent = rgb(255, 5, 126),       -- #FF057E Primary Pink
-    AccentSoft = rgb(255, 20, 147),  -- #FF1493 Accent Pink
-    AccentLight = rgb(255, 77, 157), -- #FF4D9D Hover / Active
+    Accent = rgb(0, 202, 255),       -- #00CAFF Primary Accent
+    AccentSoft = rgb(20, 206, 255),  -- #14CEFF Accent Soft
+    AccentLight = rgb(71, 217, 255), -- #47D9FF Hover / Active
     Window = rgb(15, 13, 18),        -- #0F0D12 Background
     Sidebar = rgb(15, 13, 18),
     Topbar = rgb(15, 13, 18),
