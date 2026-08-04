@@ -81,6 +81,19 @@ Controls.MenuColor = Sections.ThemePreview:AddColorPicker({
 	Continuous = true,
 })
 
+Controls.MenuOpacity = Sections.ThemePreview:AddSlider({
+	Text = "Menu Opacity",
+	Flag = "menu_opacity",
+	Min = 20,
+	Max = 100,
+	Step = 1,
+	Default = 100,
+	Suffix = "%",
+	Callback = function(value)
+		Window:SetOpacity(value, true)
+	end,
+})
+
 Categories.Targeting = Window:AddCategory({
 	Name = "Targeting",
 	Icon = Library:GetIcon(2),

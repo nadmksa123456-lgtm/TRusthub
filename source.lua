@@ -726,12 +726,13 @@ function Library:CreateWindow(options)
     })
     corner(windowShadowNear, 16)
 
-    local main = create("Frame", {
+    local main = create("CanvasGroup", {
         Parent = screenGui,
         Name = "MainWindow",
         Position = fromOffset(initialX, initialY),
         Size = fromOffset(width, height),
         BackgroundColor3 = Theme.Window,
+        GroupTransparency = 0,
         ClipsDescendants = false,
     })
     corner(main, 14)
@@ -966,11 +967,13 @@ function Library:CreateWindow(options)
     })
     gradient(content, Theme.Content, Theme.Window, 90)
 
-    local popupLayer = create("Frame", {
+    local popupLayer = create("CanvasGroup", {
         Parent = screenGui,
         Name = "PopupLayer",
         Size = UDim2.fromScale(1, 1),
         BackgroundTransparency = 1,
+        GroupTransparency = 0,
+        ClipsDescendants = false,
         ZIndex = 100,
     })
 
@@ -980,6 +983,7 @@ function Library:CreateWindow(options)
         ScreenGui = screenGui,
         Main = main,
         WindowGlow = windowGlow,
+        WindowGlowStroke = windowGlowStroke,
         WindowShadowNear = windowShadowNear,
         WindowShadowFar = windowShadowFar,
         Sidebar = sidebar,
@@ -996,6 +1000,8 @@ function Library:CreateWindow(options)
         OpenPopup = nil,
         CapturingKeybind = nil,
         Visible = true,
+        Opacity = 1,
+        GlowBindings = {},
         ToggleKey = options.ToggleKey or Enum.KeyCode.Insert,
         Flags = {},
         Setters = {},
@@ -1048,6 +1054,86 @@ function Library:CreateWindow(options)
 
     connect(main:GetPropertyChangedSignal("Position"), syncWindowDepth)
     connect(main:GetPropertyChangedSignal("Size"), syncWindowDepth)
+
+    local function normalizeOpacity(value)
+        value = tonumber(value) or 100
+        if value > 1 then value /= 100 end
+        return clamp(value, 0.2, 1)
+    end
+
+    function window:GlowTransparency(baseTransparency, active)
+        if active == false then return 1 end
+        return 1 - ((1 - baseTransparency) * self.Opacity)
+    end
+
+    function window:RegisterGlow(object, property, baseTransparency, activeResolver)
+        local binding = {
+            Object = object,
+            Property = property or "BackgroundTransparency",
+            BaseTransparency = clamp(tonumber(baseTransparency) or 0.85, 0, 1),
+            ActiveResolver = activeResolver,
+        }
+        insert(self.GlowBindings, binding)
+        self:ApplyGlowBinding(binding, false)
+        return binding
+    end
+
+    function window:ApplyGlowBinding(binding, animate)
+        local object = binding.Object
+        if not object or not object.Parent then return end
+
+        local active = true
+        if binding.ActiveResolver then
+            local ok, result = pcall(binding.ActiveResolver)
+            active = ok and result ~= false
+        end
+
+        local target = self:GlowTransparency(binding.BaseTransparency, active)
+        if animate then
+            tween(object, {[binding.Property] = target}, 0.2, Enum.EasingStyle.Quart)
+        else
+            setProperties(object, {[binding.Property] = target})
+        end
+    end
+
+    function window:RefreshGlowVisuals(animate)
+        for index = #self.GlowBindings, 1, -1 do
+            local binding = self.GlowBindings[index]
+            if not binding.Object or not binding.Object.Parent then
+                table.remove(self.GlowBindings, index)
+            else
+                self:ApplyGlowBinding(binding, animate == true)
+            end
+        end
+    end
+
+    function window:SetOpacity(value, animate)
+        self.Opacity = normalizeOpacity(value)
+
+        -- Keep the menu usable at the minimum while still making the opacity
+        -- change visually clear. Internal glows fade again through the group.
+        local groupTransparency = (1 - self.Opacity) * 0.7
+        if animate ~= false then
+            tween(self.Main, {GroupTransparency = groupTransparency}, 0.24, Enum.EasingStyle.Quart)
+            tween(self.PopupLayer, {GroupTransparency = groupTransparency}, 0.24, Enum.EasingStyle.Quart)
+        else
+            setProperties(self.Main, {GroupTransparency = groupTransparency})
+            setProperties(self.PopupLayer, {GroupTransparency = groupTransparency})
+        end
+
+        self:RefreshGlowVisuals(animate ~= false)
+        return floor(self.Opacity * 100 + 0.5)
+    end
+
+    function window:GetOpacity()
+        return floor(self.Opacity * 100 + 0.5)
+    end
+
+    window:RegisterGlow(windowGlow, "BackgroundTransparency", 0.965)
+    window:RegisterGlow(windowGlowStroke, "Transparency", 0.76)
+    window:RegisterGlow(windowShadowNear, "BackgroundTransparency", 0.72)
+    window:RegisterGlow(windowShadowFar, "BackgroundTransparency", 0.62)
+    window:SetOpacity(options.MenuOpacity or options.Opacity or 100, false)
 
     function window:FitToViewport()
         local liveCamera = Workspace.CurrentCamera or Camera
@@ -1233,6 +1319,30 @@ function Library:CreateWindow(options)
         corner(categoryButton, 10)
         bindTheme(categoryButton, "BackgroundColor3", function(theme) return theme.TabActive end)
 
+        local sideAccentGlowOuter = create("Frame", {
+            Parent = categoryButton,
+            Name = "AccentGlowOuter",
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(0, 0, 0.5, 0),
+            Size = fromOffset(9, 44),
+            BackgroundColor3 = Theme.Accent,
+            BackgroundTransparency = 1,
+        })
+        corner(sideAccentGlowOuter, 5)
+        bindTheme(sideAccentGlowOuter, "BackgroundColor3", function(theme) return theme.Accent end)
+
+        local sideAccentGlowInner = create("Frame", {
+            Parent = categoryButton,
+            Name = "AccentGlowInner",
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(0, 1, 0.5, 0),
+            Size = fromOffset(7, 40),
+            BackgroundColor3 = Theme.Accent,
+            BackgroundTransparency = 1,
+        })
+        corner(sideAccentGlowInner, 4)
+        bindTheme(sideAccentGlowInner, "BackgroundColor3", function(theme) return theme.Accent end)
+
         local sideAccent = create("Frame", {
             Parent = categoryButton,
             Name = "Accent",
@@ -1275,9 +1385,18 @@ function Library:CreateWindow(options)
 
         category.Button = categoryButton
         category.Accent = sideAccent
+        category.AccentGlowOuter = sideAccentGlowOuter
+        category.AccentGlowInner = sideAccentGlowInner
         category.Icon = icon
         category.IconFallback = iconFallback
         category.Selected = false
+
+        window:RegisterGlow(sideAccentGlowOuter, "BackgroundTransparency", 0.94, function()
+            return category.Selected
+        end)
+        window:RegisterGlow(sideAccentGlowInner, "BackgroundTransparency", 0.82, function()
+            return category.Selected
+        end)
 
         function category:ApplyTheme(animate)
             local iconColor = self.Selected and Theme.Accent or Theme.Muted
@@ -1299,6 +1418,7 @@ function Library:CreateWindow(options)
                 BackgroundTransparency = self.Selected and 0 or 1,
             })
             self:ApplyTheme(true)
+            self.Window:RefreshGlowVisuals(true)
         end
 
         onThemeChanged(category, function(_, animate)
@@ -1370,6 +1490,30 @@ function Library:CreateWindow(options)
                 PaddingLeft = UDim.new(0, 18),
                 PaddingRight = UDim.new(0, 18),
             })
+
+            local underlineGlowOuter = create("Frame", {
+                Parent = tabButton,
+                Name = "UnderlineGlowOuter",
+                AnchorPoint = Vector2.new(0.5, 1),
+                Position = UDim2.new(0.5, 0, 1, 4),
+                Size = UDim2.new(1, -8, 0, 11),
+                BackgroundColor3 = Theme.Accent,
+                BackgroundTransparency = 1,
+            })
+            corner(underlineGlowOuter, 6)
+            bindTheme(underlineGlowOuter, "BackgroundColor3", function(theme) return theme.Accent end)
+
+            local underlineGlowInner = create("Frame", {
+                Parent = tabButton,
+                Name = "UnderlineGlowInner",
+                AnchorPoint = Vector2.new(0.5, 1),
+                Position = UDim2.new(0.5, 0, 1, 2),
+                Size = UDim2.new(1, -12, 0, 7),
+                BackgroundColor3 = Theme.Accent,
+                BackgroundTransparency = 1,
+            })
+            corner(underlineGlowInner, 4)
+            bindTheme(underlineGlowInner, "BackgroundColor3", function(theme) return theme.Accent end)
 
             local underline = create("Frame", {
                 Parent = tabButton,
@@ -1458,10 +1602,19 @@ function Library:CreateWindow(options)
 
             tab.Button = tabButton
             tab.Underline = underline
+            tab.UnderlineGlowOuter = underlineGlowOuter
+            tab.UnderlineGlowInner = underlineGlowInner
             tab.Page = page
             tab.Columns = {leftColumn, rightColumn}
             tab.RefreshCanvas = refreshPageCanvas
             tab.Selected = false
+
+            window:RegisterGlow(underlineGlowOuter, "BackgroundTransparency", 0.94, function()
+                return tab.Selected
+            end)
+            window:RegisterGlow(underlineGlowInner, "BackgroundTransparency", 0.82, function()
+                return tab.Selected
+            end)
 
             function tab:ApplyTheme(animate)
                 local textColor = self.Selected and Theme.Accent or Theme.Muted
@@ -1481,6 +1634,7 @@ function Library:CreateWindow(options)
                     BackgroundTransparency = self.Selected and 0 or 1,
                 })
                 self:ApplyTheme(true)
+                self.Window:RefreshGlowVisuals(true)
             end
 
             onThemeChanged(tab, function(_, animate)
@@ -1587,6 +1741,28 @@ function Library:CreateWindow(options)
                 })
 
                 local titleWidth = min(260, max(92, 34 + #sectionObject.Name * 8))
+                local titleAccentGlowOuter = create("Frame", {
+                    Parent = cardSurface,
+                    Name = "TitleAccentGlowOuter",
+                    Position = fromOffset(18, 45),
+                    Size = fromOffset(titleWidth + 4, 14),
+                    BackgroundColor3 = Theme.Accent,
+                    BackgroundTransparency = 1,
+                })
+                corner(titleAccentGlowOuter, 7)
+                bindTheme(titleAccentGlowOuter, "BackgroundColor3", function(theme) return theme.Accent end)
+
+                local titleAccentGlowInner = create("Frame", {
+                    Parent = cardSurface,
+                    Name = "TitleAccentGlowInner",
+                    Position = fromOffset(19, 48),
+                    Size = fromOffset(titleWidth + 2, 8),
+                    BackgroundColor3 = Theme.Accent,
+                    BackgroundTransparency = 1,
+                })
+                corner(titleAccentGlowInner, 4)
+                bindTheme(titleAccentGlowInner, "BackgroundColor3", function(theme) return theme.Accent end)
+
                 local titleAccent = create("Frame", {
                     Parent = cardSurface,
                     Name = "TitleAccent",
@@ -1596,6 +1772,8 @@ function Library:CreateWindow(options)
                 })
                 corner(titleAccent, 4)
                 bindTheme(titleAccent, "BackgroundColor3", function(theme) return theme.Accent end)
+                window:RegisterGlow(titleAccentGlowOuter, "BackgroundTransparency", 0.94)
+                window:RegisterGlow(titleAccentGlowInner, "BackgroundTransparency", 0.82)
 
                 local elements = create("Frame", {
                     Parent = cardSurface,
@@ -1613,6 +1791,9 @@ function Library:CreateWindow(options)
                 sectionObject.Frame = sectionFrame
                 sectionObject.Surface = cardSurface
                 sectionObject.Title = title
+                sectionObject.TitleAccent = titleAccent
+                sectionObject.TitleAccentGlowOuter = titleAccentGlowOuter
+                sectionObject.TitleAccentGlowInner = titleAccentGlowInner
                 sectionObject.Content = elements
                 sectionObject.Layout = elementsLayout
 

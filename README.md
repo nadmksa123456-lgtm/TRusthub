@@ -135,4 +135,11 @@ print(status[0].Ready, status[0].Path, status[0].Error)
 getgenv().TRUST_MENU_FONT_SCALE = 1.4
 ```
 
+يمكن التحكم في شفافية النافذة وشدة التوهج من `20` إلى `100`:
+
+```lua
+Window:SetOpacity(75, true)
+print(Window:GetOpacity())
+```
+
 إذا تعذر تحميل صورة، تبقى الواجهة عاملة وتستخدم رمزًا نصيًا للفئة بدل أن يتوقف السكربت بالكامل.
