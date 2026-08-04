@@ -94,19 +94,25 @@ local SurfaceThemeRoles = {
     "Dim",
 }
 
-local BUILDER_SANS = "rbxasset://fonts/families/BuilderSans.json"
+local SOURCE_SANS = "rbxasset://fonts/families/SourceSansPro.json"
 local GOTHAM_FALLBACK = "rbxasset://fonts/families/GothamSSm.json"
+local INTERFACE_FONT = tostring(environment.TRUST_MENU_FONT_FAMILY or SOURCE_SANS)
+local TYPOGRAPHY_SCALE = 1.2
 
 local function interfaceFont(weight)
     local ok, font = pcall(function()
-        return Font.new(BUILDER_SANS, weight, Enum.FontStyle.Normal)
+        return Font.new(INTERFACE_FONT, weight, Enum.FontStyle.Normal)
     end)
     if ok and font then return font end
     return Font.new(GOTHAM_FALLBACK, weight, Enum.FontStyle.Normal)
 end
 
--- Builder Sans is the closest Roblox-native match to the simulator's
--- Windows system font. The lighter weights keep labels crisp and modern.
+local function interfaceTextSize(size)
+    return floor(size * TYPOGRAPHY_SCALE + 0.5)
+end
+
+-- Source Sans Pro has the larger, neutral UI proportions of the simulator's
+-- system font. A custom Roblox FontFamily can override it through the executor.
 local Fonts = {
     Regular = interfaceFont(Enum.FontWeight.Regular),
     Semibold = interfaceFont(Enum.FontWeight.Medium),
@@ -789,7 +795,7 @@ function Library:CreateWindow(options)
         BackgroundTransparency = 1,
         Text = options.LogoFallback or "",
         TextColor3 = Theme.Accent,
-        TextSize = 21,
+        TextSize = interfaceTextSize(21),
         FontFace = Fonts.Bold,
         Visible = logoImage == "" and type(options.LogoFallback) == "string" and options.LogoFallback ~= "",
     })
@@ -818,7 +824,7 @@ function Library:CreateWindow(options)
         BackgroundTransparency = 1,
         Text = options.BrandAccentText or "TRust",
         TextColor3 = Theme.Accent,
-        TextSize = 10,
+        TextSize = interfaceTextSize(10),
         FontFace = Fonts.Bold,
         LayoutOrder = 1,
     })
@@ -831,7 +837,7 @@ function Library:CreateWindow(options)
         BackgroundTransparency = 1,
         Text = options.BrandText or " Menu",
         TextColor3 = Theme.White,
-        TextSize = 10,
+        TextSize = interfaceTextSize(10),
         FontFace = Fonts.Bold,
         LayoutOrder = 2,
     })
@@ -899,7 +905,7 @@ function Library:CreateWindow(options)
         AutoButtonColor = false,
         Text = "",
         TextColor3 = Theme.Muted,
-        TextSize = 28,
+        TextSize = interfaceTextSize(28),
         FontFace = Fonts.Regular,
     })
     corner(searchButton, 9)
@@ -935,7 +941,7 @@ function Library:CreateWindow(options)
         PlaceholderColor3 = Theme.Dim,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 14,
+        TextSize = interfaceTextSize(14),
         FontFace = Fonts.Regular,
         ClearTextOnFocus = false,
         Visible = false,
@@ -1261,7 +1267,7 @@ function Library:CreateWindow(options)
             BackgroundTransparency = 1,
             Text = categoryOptions.Symbol or string.sub(category.Name, 1, 1),
             TextColor3 = Theme.Muted,
-            TextSize = 19,
+            TextSize = interfaceTextSize(19),
             FontFace = Fonts.Bold,
             Visible = iconAsset == "",
         })
@@ -1351,7 +1357,7 @@ function Library:CreateWindow(options)
                 AutoButtonColor = false,
                 Text = tab.Name,
                 TextColor3 = Theme.Muted,
-                TextSize = 17,
+                TextSize = interfaceTextSize(17),
                 FontFace = Fonts.Semibold,
                 Visible = self.Window.CurrentCategory == self,
                 LayoutOrder = tabOptions.Order or (#self.Tabs + 1),
@@ -1608,7 +1614,7 @@ function Library:CreateWindow(options)
                     Text = sectionObject.Name,
                     TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left,
-                    TextSize = 18,
+                    TextSize = interfaceTextSize(18),
                     FontFace = Fonts.Bold,
                 })
 
@@ -1851,7 +1857,7 @@ function SectionMethods:AddToggle(options)
         Text = text,
         TextColor3 = Theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
     })
 
@@ -1886,17 +1892,41 @@ function SectionMethods:AddToggle(options)
         ZIndex = 3,
     })
 
-    local knobShadow = create("Frame", {
+    local knobShadowOuter = create("Frame", {
         Parent = knob,
-        Name = "KnobShadow",
+        Name = "KnobShadowOuter",
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 1, 0.5, 2),
-        Size = UDim2.fromScale(1, 1),
+        Position = UDim2.new(0.5, 0, 0.5, 1),
+        Size = UDim2.new(1, 10, 1, 10),
         BackgroundColor3 = Theme.Shadow,
-        BackgroundTransparency = 0.5,
+        BackgroundTransparency = 0.92,
         ZIndex = 4,
     })
-    corner(knobShadow, 10)
+    corner(knobShadowOuter, 15)
+
+    local knobShadowMiddle = create("Frame", {
+        Parent = knob,
+        Name = "KnobShadowMiddle",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 1),
+        Size = UDim2.new(1, 6, 1, 6),
+        BackgroundColor3 = Theme.Shadow,
+        BackgroundTransparency = 0.86,
+        ZIndex = 4,
+    })
+    corner(knobShadowMiddle, 13)
+
+    local knobShadowInner = create("Frame", {
+        Parent = knob,
+        Name = "KnobShadowInner",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 1),
+        Size = UDim2.new(1, 2, 1, 2),
+        BackgroundColor3 = Theme.Shadow,
+        BackgroundTransparency = 0.74,
+        ZIndex = 4,
+    })
+    corner(knobShadowInner, 11)
 
     local knobFace = create("Frame", {
         Parent = knob,
@@ -1905,17 +1935,17 @@ function SectionMethods:AddToggle(options)
         Position = UDim2.fromScale(0.5, 0.5),
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Theme.White,
-        ZIndex = 4,
+        ZIndex = 5,
     })
     corner(knobFace, 10)
-    local knobStroke = stroke(knobFace, Theme.Border:Lerp(Theme.White, 0.48), 0.12, 1)
+    local knobStroke = stroke(knobFace, Theme.Border:Lerp(Theme.White, 0.48), 0.22, 1)
     create("UIGradient", {
         Parent = knobFace,
         Rotation = 90,
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, rgb(255, 255, 255)),
-            ColorSequenceKeypoint.new(0.52, rgb(246, 248, 250)),
-            ColorSequenceKeypoint.new(1, rgb(213, 219, 226)),
+            ColorSequenceKeypoint.new(0.52, rgb(249, 250, 252)),
+            ColorSequenceKeypoint.new(1, rgb(231, 235, 240)),
         }),
     })
 
@@ -1926,7 +1956,7 @@ function SectionMethods:AddToggle(options)
         Size = UDim2.new(1, -7, 0, 7),
         BackgroundColor3 = Theme.White,
         BackgroundTransparency = 0.58,
-        ZIndex = 5,
+        ZIndex = 6,
     })
     corner(knobHighlight, 7)
     create("UIGradient", {
@@ -1946,7 +1976,7 @@ function SectionMethods:AddToggle(options)
         SwitchStroke = switchStroke,
         Glow = switchGlow,
         Knob = knob,
-        KnobShadow = knobShadow,
+        KnobShadows = {knobShadowOuter, knobShadowMiddle, knobShadowInner},
         KnobFace = knobFace,
         KnobStroke = knobStroke,
         KnobHighlight = knobHighlight,
@@ -1966,14 +1996,18 @@ function SectionMethods:AddToggle(options)
             tween(self.SwitchStroke, {Color = strokeColor}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Label, {TextColor3 = labelColor}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Glow, {BackgroundColor3 = Theme.Accent}, 0.18, Enum.EasingStyle.Quart)
-            tween(self.KnobShadow, {BackgroundColor3 = Theme.Shadow}, 0.18, Enum.EasingStyle.Quart)
+            for _, shadow in self.KnobShadows do
+                tween(shadow, {BackgroundColor3 = Theme.Shadow}, 0.18, Enum.EasingStyle.Quart)
+            end
             tween(self.KnobStroke, {Color = knobStrokeColor}, 0.18, Enum.EasingStyle.Quart)
         else
             setProperties(self.Switch, {BackgroundColor3 = switchColor})
             setProperties(self.SwitchStroke, {Color = strokeColor})
             setProperties(self.Label, {TextColor3 = labelColor})
             setProperties(self.Glow, {BackgroundColor3 = Theme.Accent})
-            setProperties(self.KnobShadow, {BackgroundColor3 = Theme.Shadow})
+            for _, shadow in self.KnobShadows do
+                setProperties(shadow, {BackgroundColor3 = Theme.Shadow})
+            end
             setProperties(self.KnobStroke, {Color = knobStrokeColor})
         end
     end
@@ -1982,16 +2016,22 @@ function SectionMethods:AddToggle(options)
         self:ApplyTheme(animate)
         local knobPosition = UDim2.new(0, self.Value and 28 or 4, 0.5, 0)
         local glowTransparency = self.Value and 0.82 or 1
-        local knobShadowTransparency = self.Value and 0.44 or 0.54
+        local shadowTransparency = self.Value
+            and {0.89, 0.82, 0.7}
+            or {0.93, 0.87, 0.76}
 
         if animate then
             tween(self.Glow, {BackgroundTransparency = glowTransparency}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Knob, {Position = knobPosition}, 0.22, Enum.EasingStyle.Quint)
-            tween(self.KnobShadow, {BackgroundTransparency = knobShadowTransparency}, 0.2, Enum.EasingStyle.Quart)
+            for index, shadow in self.KnobShadows do
+                tween(shadow, {BackgroundTransparency = shadowTransparency[index]}, 0.2, Enum.EasingStyle.Quart)
+            end
         else
             setProperties(self.Glow, {BackgroundTransparency = glowTransparency})
             setProperties(self.Knob, {Position = knobPosition})
-            setProperties(self.KnobShadow, {BackgroundTransparency = knobShadowTransparency})
+            for index, shadow in self.KnobShadows do
+                setProperties(shadow, {BackgroundTransparency = shadowTransparency[index]})
+            end
         end
     end
 
@@ -2090,7 +2130,7 @@ function SectionMethods:AddSlider(options)
         Text = text,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Semibold,
     })
 
@@ -2103,7 +2143,7 @@ function SectionMethods:AddSlider(options)
         Text = "",
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Right,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Semibold,
     })
 
@@ -2337,7 +2377,7 @@ function SectionMethods:AddDropdown(options)
         Text = text,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Semibold,
     })
 
@@ -2350,7 +2390,7 @@ function SectionMethods:AddDropdown(options)
         Text = "",
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
     })
     corner(field, 7)
@@ -2370,7 +2410,7 @@ function SectionMethods:AddDropdown(options)
         BackgroundTransparency = 1,
         Text = "v",
         TextColor3 = Theme.Muted,
-        TextSize = 16,
+        TextSize = interfaceTextSize(16),
         FontFace = Fonts.Bold,
         ZIndex = 3,
     })
@@ -2487,7 +2527,7 @@ function SectionMethods:AddDropdown(options)
                 Text = tostring(value),
                 TextColor3 = Theme.Muted,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                TextSize = 14,
+                TextSize = interfaceTextSize(14),
                 FontFace = Fonts.Regular,
                 LayoutOrder = index,
                 ZIndex = 101,
@@ -2585,7 +2625,7 @@ function SectionMethods:AddTextbox(options)
         Text = text,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Semibold,
     })
 
@@ -2600,7 +2640,7 @@ function SectionMethods:AddTextbox(options)
         PlaceholderColor3 = Theme.Dim,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
     })
     corner(box, 7)
@@ -2690,7 +2730,7 @@ function SectionMethods:AddButton(options)
         AutoButtonColor = false,
         Text = text,
         TextColor3 = Theme.Text,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Semibold,
         LayoutOrder = options.Order or (#self.Items + 1),
     })
@@ -2768,7 +2808,7 @@ function SectionMethods:AddLabel(options)
         TextYAlignment = Enum.TextYAlignment.Top,
         TextWrapped = true,
         RichText = options.RichText == true,
-        TextSize = options.TextSize or 14,
+        TextSize = options.TextSize or interfaceTextSize(14),
         FontFace = options.Bold and Fonts.Semibold or Fonts.Regular,
         LayoutOrder = options.Order or (#self.Items + 1),
     })
@@ -2829,7 +2869,7 @@ function SectionMethods:AddKeybind(options)
         Text = text,
         TextColor3 = Theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
     })
 
@@ -2842,7 +2882,7 @@ function SectionMethods:AddKeybind(options)
         AutoButtonColor = false,
         Text = "",
         TextColor3 = Theme.Text,
-        TextSize = 12,
+        TextSize = interfaceTextSize(12),
         FontFace = Fonts.Semibold,
     })
     corner(bindButton, 6)
@@ -3020,7 +3060,7 @@ function SectionMethods:AddColorPicker(options)
         Text = text,
         TextColor3 = Theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 15,
+        TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
     })
 
@@ -3054,7 +3094,7 @@ function SectionMethods:AddColorPicker(options)
         Text = colorToHex(Theme.Accent),
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextSize = 12,
+        TextSize = interfaceTextSize(12),
         FontFace = Fonts.Semibold,
         ZIndex = 2,
     })
@@ -3177,7 +3217,7 @@ function SectionMethods:AddColorPicker(options)
         PlaceholderColor3 = Theme.Dim,
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Center,
-        TextSize = 14,
+        TextSize = interfaceTextSize(14),
         FontFace = Fonts.Semibold,
         ZIndex = 121,
     })
