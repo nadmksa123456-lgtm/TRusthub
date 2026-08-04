@@ -94,10 +94,23 @@ local SurfaceThemeRoles = {
     "Dim",
 }
 
+local BUILDER_SANS = "rbxasset://fonts/families/BuilderSans.json"
+local GOTHAM_FALLBACK = "rbxasset://fonts/families/GothamSSm.json"
+
+local function interfaceFont(weight)
+    local ok, font = pcall(function()
+        return Font.new(BUILDER_SANS, weight, Enum.FontStyle.Normal)
+    end)
+    if ok and font then return font end
+    return Font.new(GOTHAM_FALLBACK, weight, Enum.FontStyle.Normal)
+end
+
+-- Builder Sans is the closest Roblox-native match to the simulator's
+-- Windows system font. The lighter weights keep labels crisp and modern.
 local Fonts = {
-    Regular = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-    Semibold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-    Bold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+    Regular = interfaceFont(Enum.FontWeight.Regular),
+    Semibold = interfaceFont(Enum.FontWeight.Medium),
+    Bold = interfaceFont(Enum.FontWeight.SemiBold),
 }
 
 local Library = {
