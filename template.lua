@@ -73,17 +73,10 @@ Controls.Range = Sections.GeneralControls:AddSlider({
 	Default = 150,
 })
 
-Controls.MenuColor = Sections.ThemePreview:AddColorPicker({
-	Text = "Menu Color",
-	Flag = "menu_color",
-	Default = Color3.fromRGB(7, 132, 255),
-	ApplyToTheme = true,
-	Continuous = true,
-})
-
 Controls.MenuOpacity = Sections.ThemePreview:AddSlider({
 	Text = "Menu Opacity",
 	Flag = "menu_opacity",
+	Order = 2,
 	Min = 20,
 	Max = 100,
 	Step = 1,
@@ -92,6 +85,15 @@ Controls.MenuOpacity = Sections.ThemePreview:AddSlider({
 	Callback = function(value)
 		Window:SetOpacity(value, true)
 	end,
+})
+
+Controls.MenuColor = Sections.ThemePreview:AddColorPicker({
+	Text = "Menu Color",
+	Flag = "menu_color",
+	Order = 1,
+	Default = Color3.fromRGB(7, 132, 255),
+	ApplyToTheme = true,
+	Continuous = true,
 })
 
 Categories.Targeting = Window:AddCategory({
