@@ -94,29 +94,33 @@ local SurfaceThemeRoles = {
     "Dim",
 }
 
-local TYPOGRAPHY_SCALE = clamp(tonumber(environment.TRUST_MENU_FONT_SCALE) or 1.35, 1, 1.6)
+local ROBOTO_FAMILY = "rbxasset://fonts/families/Roboto.json"
+local GOTHAM_FALLBACK = "rbxasset://fonts/families/GothamSSm.json"
+local TYPOGRAPHY_SCALE = clamp(tonumber(environment.TRUST_MENU_FONT_SCALE) or 1.2, 1, 1.5)
 
-local function enumFont(fontEnum, fallbackEnum)
-    local ok, font = pcall(Font.fromEnum, fontEnum)
+local function robotoFont(weight)
+    local ok, font = pcall(function()
+        return Font.new(ROBOTO_FAMILY, weight, Enum.FontStyle.Normal)
+    end)
     if ok and font then return font end
-    return Font.fromEnum(fallbackEnum or Enum.Font.GothamBold)
+    return Font.new(GOTHAM_FALLBACK, weight, Enum.FontStyle.Normal)
 end
 
 local function interfaceTextSize(size)
     return floor(size * TYPOGRAPHY_SCALE + 0.5)
 end
 
--- Use one executor-safe bold face across the interface so small labels never
--- fall back to a thin weight on Xeno or Volt.
+-- The hierarchy intentionally keeps control names light and reserves stronger
+-- weight for section titles. This matches the simulator without visual noise.
 local Fonts = {
-    Regular = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
-    Semibold = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
-    Bold = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
+    Regular = robotoFont(Enum.FontWeight.Regular),
+    Semibold = robotoFont(Enum.FontWeight.Medium),
+    Bold = robotoFont(Enum.FontWeight.Bold),
 }
 
 local Library = {
     Version = "1.0.0",
-    FontName = "Gotham Bold",
+    FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
     Flags = {},
@@ -1611,7 +1615,7 @@ function Library:CreateWindow(options)
                     Text = sectionObject.Name,
                     TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left,
-                    TextSize = interfaceTextSize(18),
+                    TextSize = interfaceTextSize(19),
                     FontFace = Fonts.Bold,
                 })
 
@@ -2128,7 +2132,7 @@ function SectionMethods:AddSlider(options)
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextSize = interfaceTextSize(15),
-        FontFace = Fonts.Semibold,
+        FontFace = Fonts.Regular,
     })
 
     local valueLabel = create("TextLabel", {
@@ -2141,7 +2145,7 @@ function SectionMethods:AddSlider(options)
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextSize = interfaceTextSize(15),
-        FontFace = Fonts.Semibold,
+        FontFace = Fonts.Regular,
     })
 
     local hitbox = create("TextButton", {
@@ -2375,7 +2379,7 @@ function SectionMethods:AddDropdown(options)
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextSize = interfaceTextSize(15),
-        FontFace = Fonts.Semibold,
+        FontFace = Fonts.Regular,
     })
 
     local field = create("TextButton", {
@@ -2623,7 +2627,7 @@ function SectionMethods:AddTextbox(options)
         TextColor3 = Theme.Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextSize = interfaceTextSize(15),
-        FontFace = Fonts.Semibold,
+        FontFace = Fonts.Regular,
     })
 
     local box = create("TextBox", {
@@ -2728,7 +2732,7 @@ function SectionMethods:AddButton(options)
         Text = text,
         TextColor3 = Theme.Text,
         TextSize = interfaceTextSize(15),
-        FontFace = Fonts.Semibold,
+        FontFace = Fonts.Regular,
         LayoutOrder = options.Order or (#self.Items + 1),
     })
     corner(button, 7)

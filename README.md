@@ -126,10 +126,10 @@ print(status[0].Ready, status[0].Path, status[0].Error)
 - `makefolder` اختياري في البيئات التي تنشئ المجلدات تلقائيًا
 - `getcustomasset` أو `getsynasset`
 
-يستخدم المنيو `Gotham Bold` في جميع النصوص، لضمان ظهور الخط بوضوح وبنفس
-النتيجة في Xeno وVolt.
+يستخدم المنيو عائلة `Roboto` المدمجة: عناوين الأقسام أكبر وبوزن Bold، بينما
+تظهر أسماء المميزات والقيم بوزن Regular خفيف وواضح.
 
-مقياس الخط الافتراضي هو `1.35`. يمكن تغييره قبل تشغيل `template.lua`:
+مقياس الخط الافتراضي هو `1.2`. يمكن تغييره قبل تشغيل `template.lua`:
 
 ```lua
 getgenv().TRUST_MENU_FONT_SCALE = 1.4
