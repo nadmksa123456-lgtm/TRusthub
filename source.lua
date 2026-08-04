@@ -120,7 +120,7 @@ local Fonts = {
 
 local Library = {
     Version = "1.1.0-dev",
-    Build = "design-card-depth-v3-contained-glow-v1",
+    Build = "design-card-depth-v3-contained-glow-v2",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -737,7 +737,7 @@ function Library:CreateWindow(options)
         Size = fromOffset(width, height),
         BackgroundColor3 = Theme.Window,
         GroupTransparency = 0,
-        ClipsDescendants = false,
+        ClipsDescendants = true,
     })
     corner(main, 14)
     stroke(main, Theme.Border, 0.05, 1)
