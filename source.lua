@@ -120,7 +120,7 @@ local Fonts = {
 
 local Library = {
     Version = "1.1.0-dev",
-    Build = "design-card-depth-v3-tabs-v1",
+    Build = "design-card-depth-v3-contained-glow-v1",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -700,7 +700,8 @@ function Library:CreateWindow(options)
         Position = fromOffset(initialX + 8, initialY + 13),
         Size = fromOffset(width + 4, height + 5),
         BackgroundColor3 = Theme.Shadow,
-        BackgroundTransparency = 0.62,
+        BackgroundTransparency = 1,
+        Visible = false,
     })
     corner(windowShadowFar, 18)
 
@@ -710,7 +711,8 @@ function Library:CreateWindow(options)
         Position = fromOffset(initialX - 5, initialY - 5),
         Size = fromOffset(width + 10, height + 10),
         BackgroundColor3 = Theme.Accent,
-        BackgroundTransparency = 0.965,
+        BackgroundTransparency = 1,
+        Visible = false,
     })
     corner(windowGlow, 18)
     local windowGlowStroke = stroke(windowGlow, Theme.Accent, 0.76, 2)
@@ -723,7 +725,8 @@ function Library:CreateWindow(options)
         Position = fromOffset(initialX + 4, initialY + 7),
         Size = fromOffset(width, height + 2),
         BackgroundColor3 = Theme.Shadow,
-        BackgroundTransparency = 0.72,
+        BackgroundTransparency = 1,
+        Visible = false,
     })
     corner(windowShadowNear, 16)
 
@@ -739,6 +742,22 @@ function Library:CreateWindow(options)
     corner(main, 14)
     stroke(main, Theme.Border, 0.05, 1)
     gradient(main, Theme.Window, Theme.Content, 90)
+
+    -- Accent depth is rendered inside the window bounds. The old outer shadow
+    -- layers remain hidden for field compatibility, preventing bright themes
+    -- and high opacity from leaking glow beyond the menu frame.
+    local windowInnerGlow = create("Frame", {
+        Parent = main,
+        Name = "WindowInnerGlow",
+        Position = fromOffset(2, 2),
+        Size = UDim2.new(1, -4, 1, -4),
+        BackgroundTransparency = 1,
+        Active = false,
+        ZIndex = 50,
+    })
+    corner(windowInnerGlow, 12)
+    local windowInnerGlowStroke = stroke(windowInnerGlow, Theme.Accent, 0.78, 2)
+    bindTheme(windowInnerGlowStroke, "Color", function(theme) return theme.Accent end)
 
     local sidebar = create("Frame", {
         Parent = main,
@@ -987,6 +1006,8 @@ function Library:CreateWindow(options)
         WindowGlowStroke = windowGlowStroke,
         WindowShadowNear = windowShadowNear,
         WindowShadowFar = windowShadowFar,
+        WindowInnerGlow = windowInnerGlow,
+        WindowInnerGlowStroke = windowInnerGlowStroke,
         Sidebar = sidebar,
         Topbar = topbar,
         TopTabs = topTabs,
@@ -1132,10 +1153,7 @@ function Library:CreateWindow(options)
         return floor(self.Opacity * 100 + 0.5)
     end
 
-    window:RegisterGlow(windowGlow, "BackgroundTransparency", 0.965)
-    window:RegisterGlow(windowGlowStroke, "Transparency", 0.76)
-    window:RegisterGlow(windowShadowNear, "BackgroundTransparency", 0.72)
-    window:RegisterGlow(windowShadowFar, "BackgroundTransparency", 0.62)
+    window:RegisterGlow(windowInnerGlowStroke, "Transparency", 0.78)
     window:SetOpacity(options.MenuOpacity or options.Opacity or 100, false)
 
     function window:FitToViewport()
