@@ -119,8 +119,8 @@ local Fonts = {
 }
 
 local Library = {
-    Version = "1.0.1-preview",
-    Build = "opacity-layout-v2",
+    Version = "1.0.1",
+    Build = "stable-v1.0.1",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
