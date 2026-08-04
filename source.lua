@@ -119,8 +119,8 @@ local Fonts = {
 }
 
 local Library = {
-    Version = "1.0.1",
-    Build = "stable-v1.0.1",
+    Version = "1.1.0-dev",
+    Build = "design-card-depth-v3-hover-v1",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -1386,13 +1386,92 @@ function Library:CreateWindow(options)
             Visible = iconAsset == "",
         })
 
+        local tooltip = create("TextLabel", {
+            Parent = main,
+            Name = category.Name .. "Tooltip",
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = fromOffset(sidebarWidth + 10, 0),
+            Size = fromOffset(0, 34),
+            AutomaticSize = Enum.AutomaticSize.X,
+            BackgroundColor3 = Theme.ControlBottom,
+            BackgroundTransparency = 1,
+            Text = category.Name,
+            TextColor3 = Theme.Text,
+            TextTransparency = 1,
+            TextSize = interfaceTextSize(14),
+            FontFace = Fonts.Semibold,
+            Visible = false,
+            ZIndex = 80,
+        })
+        corner(tooltip, 8)
+        local tooltipStroke = stroke(tooltip, Theme.Accent, 1, 1)
+        create("UIPadding", {
+            Parent = tooltip,
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
+        })
+        local tooltipScale = create("UIScale", {
+            Parent = tooltip,
+            Scale = 0.92,
+        })
+        bindTheme(tooltip, "BackgroundColor3", function(theme) return theme.ControlBottom end)
+        bindTheme(tooltipStroke, "Color", function(theme) return theme.Accent end)
+
+        local tooltipRevision = 0
+
+        local function showTooltip()
+            tooltipRevision += 1
+            local centerY = categoryButton.AbsolutePosition.Y
+                - main.AbsolutePosition.Y
+                + categoryButton.AbsoluteSize.Y * 0.5
+
+            setProperties(tooltip, {
+                Position = fromOffset(sidebarWidth + 10, centerY),
+                BackgroundTransparency = 1,
+                TextTransparency = 1,
+                Visible = true,
+            })
+            setProperties(tooltipStroke, {Transparency = 1})
+            setProperties(tooltipScale, {Scale = 0.92})
+
+            tween(tooltip, {
+                BackgroundTransparency = 0.08,
+                TextTransparency = 0,
+            }, 0.14, Enum.EasingStyle.Quart)
+            tween(tooltipStroke, {Transparency = 0.42}, 0.14, Enum.EasingStyle.Quart)
+            tween(tooltipScale, {Scale = 1}, 0.18, Enum.EasingStyle.Back)
+        end
+
+        local function hideTooltip()
+            tooltipRevision += 1
+            local revision = tooltipRevision
+
+            tween(tooltip, {
+                BackgroundTransparency = 1,
+                TextTransparency = 1,
+            }, 0.11, Enum.EasingStyle.Quart)
+            tween(tooltipStroke, {Transparency = 1}, 0.11, Enum.EasingStyle.Quart)
+            tween(tooltipScale, {Scale = 0.96}, 0.11, Enum.EasingStyle.Quart)
+
+            task.delay(0.12, function()
+                if tooltipRevision == revision and tooltip.Parent then
+                    tooltip.Visible = false
+                end
+            end)
+        end
+
         category.Button = categoryButton
         category.Accent = sideAccent
         category.AccentGlowOuter = sideAccentGlowOuter
         category.AccentGlowInner = sideAccentGlowInner
         category.Icon = icon
         category.IconFallback = iconFallback
+        category.Tooltip = tooltip
+        category.TooltipStroke = tooltipStroke
+        category.TooltipScale = tooltipScale
         category.Selected = false
+        category.Hovered = false
+        category.Pressed = false
 
         window:RegisterGlow(sideAccentGlowOuter, "BackgroundTransparency", 0.94, function()
             return category.Selected
@@ -1412,14 +1491,45 @@ function Library:CreateWindow(options)
             end
         end
 
+        function category:ApplyInteractionVisual(animate)
+            local iconSize = self.Pressed and 27 or (self.Hovered and 34 or 30)
+            local fallbackSize = self.Pressed and 31 or (self.Hovered and 38 or 34)
+            local iconPosition = UDim2.new(0.5, 0, 0.5, self.Pressed and 2 or 0)
+            local backgroundTransparency = self.Selected and 0
+                or (self.Hovered and 0.42 or 1)
+
+            if animate == false then
+                setProperties(self.Button, {BackgroundTransparency = backgroundTransparency})
+                setProperties(self.Icon, {
+                    Position = iconPosition,
+                    Size = fromOffset(iconSize, iconSize),
+                })
+                setProperties(self.IconFallback, {
+                    Position = iconPosition,
+                    Size = fromOffset(fallbackSize, fallbackSize),
+                })
+                return
+            end
+
+            local duration = self.Pressed and 0.07 or 0.16
+            local easing = self.Pressed and Enum.EasingStyle.Quad or Enum.EasingStyle.Back
+            tween(self.Button, {BackgroundTransparency = backgroundTransparency}, 0.14, Enum.EasingStyle.Quart)
+            tween(self.Icon, {
+                Position = iconPosition,
+                Size = fromOffset(iconSize, iconSize),
+            }, duration, easing)
+            tween(self.IconFallback, {
+                Position = iconPosition,
+                Size = fromOffset(fallbackSize, fallbackSize),
+            }, duration, easing)
+        end
+
         function category:SetSelectedVisual(selected)
             self.Selected = selected == true
-            tween(self.Button, {
-                BackgroundTransparency = self.Selected and 0 or 1,
-            })
             tween(self.Accent, {
                 BackgroundTransparency = self.Selected and 0 or 1,
             })
+            self:ApplyInteractionVisual(true)
             self:ApplyTheme(true)
             self.Window:RefreshGlowVisuals(true)
         end
@@ -1455,8 +1565,39 @@ function Library:CreateWindow(options)
             end
         end
 
+        categoryButton.MouseEnter:Connect(function()
+            category.Hovered = true
+            showTooltip()
+            category:ApplyInteractionVisual(true)
+        end)
+
+        categoryButton.MouseLeave:Connect(function()
+            category.Hovered = false
+            category.Pressed = false
+            hideTooltip()
+            category:ApplyInteractionVisual(true)
+        end)
+
+        categoryButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+                or input.UserInputType == Enum.UserInputType.Touch then
+                category.Pressed = true
+                category:ApplyInteractionVisual(true)
+            end
+        end)
+
+        categoryButton.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+                or input.UserInputType == Enum.UserInputType.Touch then
+                category.Pressed = false
+                category:ApplyInteractionVisual(true)
+            end
+        end)
+
         categoryButton.Activated:Connect(function()
+            category.Pressed = false
             category:Select()
+            category:ApplyInteractionVisual(true)
         end)
 
         insert(self.Categories, category)
