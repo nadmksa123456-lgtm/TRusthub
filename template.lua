@@ -20,7 +20,7 @@ local Library = compiler(loaderSource, "@TRust-Menu/loader.lua")()
 local Window = Library:CreateWindow({
 	Name = "TRust Menu",
 	Size = Vector2.new(1000, 620),
-	ThemeColor = Color3.fromRGB(7, 132, 255),
+	ThemeColor = Color3.fromRGB(255, 5, 126),
 	ToggleKey = Enum.KeyCode.Insert,
 	ShowBrandName = false,
 })
@@ -76,7 +76,7 @@ Controls.MenuColor = Sections.MenuSettings:AddColorPicker({
 	Text = "Menu Color",
 	Flag = "menu_color",
 	Order = 1,
-	Default = Color3.fromRGB(7, 132, 255),
+	Default = Color3.fromRGB(255, 5, 126),
 	ApplyToTheme = true,
 	Continuous = true,
 })

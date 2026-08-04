@@ -52,30 +52,30 @@ end
 local customAsset = getcustomasset or getsynasset
 
 local Theme = {
-    Accent = rgb(7, 132, 255),
-    AccentSoft = rgb(0, 86, 170),
-    AccentLight = rgb(72, 169, 255),
-    Window = rgb(23, 29, 36),
-    Sidebar = rgb(23, 27, 31),
-    Topbar = rgb(23, 29, 36),
-    Content = rgb(23, 30, 37),
-    Card = rgb(32, 48, 64),
-    CardBottom = rgb(28, 40, 52),
-    Shadow = rgb(3, 8, 14),
-    TabActive = rgb(19, 47, 75),
-    Control = rgb(48, 71, 91),
-    ControlBottom = rgb(41, 63, 82),
-    ControlHover = rgb(39, 68, 95),
-    Track = rgb(64, 72, 81),
-    Border = rgb(31, 60, 90),
+    Accent = rgb(255, 5, 126),       -- #FF057E Primary Pink
+    AccentSoft = rgb(255, 20, 147),  -- #FF1493 Accent Pink
+    AccentLight = rgb(255, 77, 157), -- #FF4D9D Hover / Active
+    Window = rgb(15, 13, 18),        -- #0F0D12 Background
+    Sidebar = rgb(15, 13, 18),
+    Topbar = rgb(15, 13, 18),
+    Content = rgb(22, 19, 26),       -- #16131A Surface
+    Card = rgb(30, 26, 35),          -- #1E1A23 Card
+    CardBottom = rgb(22, 19, 26),
+    Shadow = rgb(15, 13, 18),
+    TabActive = rgb(30, 26, 35),
+    Control = rgb(44, 37, 51),       -- #2C2533 Border / control depth
+    ControlBottom = rgb(30, 26, 35),
+    ControlHover = rgb(44, 37, 51),
+    Track = rgb(44, 37, 51),
+    Border = rgb(44, 37, 51),
     Text = rgb(255, 255, 255),
-    Muted = rgb(153, 159, 165),
-    Dim = rgb(102, 114, 127),
+    Muted = rgb(179, 179, 184),      -- #B3B3B8 Text Secondary
+    Dim = rgb(179, 179, 184),
     White = rgb(255, 255, 255),
 }
 
--- Accent roles are updated through bindings/listeners. These surface roles are
--- recolored as a complete palette so Menu Color changes the whole interface.
+-- These surface roles stay fixed when Menu Color changes. Only accent-bound
+-- details such as lines, active icons, toggles, sliders, and glow are recolored.
 local SurfaceThemeRoles = {
     "Window",
     "Sidebar",
@@ -405,28 +405,22 @@ local function applySurfaceTheme(library, previousTheme)
     end
 end
 
-local function deriveSurfaceTheme(color)
-    local hue, saturation = Color3.toHSV(color)
-    local influence = clamp(saturation, 0, 1)
-    local function tone(roleSaturation, brightness)
-        return Color3.fromHSV(hue, clamp(roleSaturation * influence, 0, 1), brightness)
-    end
-
-    Theme.Window = tone(0.36, 0.141)
-    Theme.Sidebar = tone(0.26, 0.122)
-    Theme.Topbar = Theme.Window
-    Theme.Content = tone(0.38, 0.145)
-    Theme.Card = tone(0.50, 0.251)
-    Theme.CardBottom = tone(0.46, 0.204)
-    Theme.Shadow = tone(0.78, 0.055)
-    Theme.Control = tone(0.47, 0.357)
-    Theme.ControlBottom = tone(0.50, 0.322)
-    Theme.Track = tone(0.21, 0.318)
-    Theme.Border = tone(0.66, 0.353)
-    Theme.Muted = tone(0.08, 0.647)
-    Theme.Dim = tone(0.20, 0.498)
-    Theme.TabActive = Theme.Content:Lerp(color, 0.10)
-    Theme.ControlHover = Theme.Control:Lerp(color, 0.14)
+local function deriveSurfaceTheme()
+    Theme.Window = rgb(15, 13, 18)
+    Theme.Sidebar = rgb(15, 13, 18)
+    Theme.Topbar = rgb(15, 13, 18)
+    Theme.Content = rgb(22, 19, 26)
+    Theme.Card = rgb(30, 26, 35)
+    Theme.CardBottom = rgb(22, 19, 26)
+    Theme.Shadow = rgb(15, 13, 18)
+    Theme.TabActive = rgb(30, 26, 35)
+    Theme.Control = rgb(44, 37, 51)
+    Theme.ControlBottom = rgb(30, 26, 35)
+    Theme.ControlHover = rgb(44, 37, 51)
+    Theme.Track = rgb(44, 37, 51)
+    Theme.Border = rgb(44, 37, 51)
+    Theme.Muted = rgb(179, 179, 184)
+    Theme.Dim = rgb(179, 179, 184)
 end
 
 function Library:SetThemeColor(value, animate)
@@ -438,9 +432,14 @@ function Library:SetThemeColor(value, animate)
 
     local previousTheme = snapshotSurfaceTheme()
     Theme.Accent = color
-    Theme.AccentSoft = color:Lerp(rgb(0, 0, 0), 0.34)
-    Theme.AccentLight = color:Lerp(Theme.White, 0.24)
-    deriveSurfaceTheme(color)
+    if colorsClose(color, rgb(255, 5, 126)) then
+        Theme.AccentSoft = rgb(255, 20, 147)
+        Theme.AccentLight = rgb(255, 77, 157)
+    else
+        Theme.AccentSoft = color:Lerp(Theme.White, 0.08)
+        Theme.AccentLight = color:Lerp(Theme.White, 0.28)
+    end
+    deriveSurfaceTheme()
     applySurfaceTheme(self, previousTheme)
 
     for index = #self.ThemeBindings, 1, -1 do
