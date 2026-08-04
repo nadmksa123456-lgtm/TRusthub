@@ -119,7 +119,8 @@ local Fonts = {
 }
 
 local Library = {
-    Version = "1.0.0",
+    Version = "1.0.1-preview",
+    Build = "opacity-layout-v2",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -1008,6 +1009,8 @@ function Library:CreateWindow(options)
         CameraConnection = nil,
     }
     screenGui:SetAttribute("MenuName", window.Name)
+    screenGui:SetAttribute("LibraryVersion", Library.Version)
+    screenGui:SetAttribute("LibraryBuild", Library.Build)
 
     local function syncWindowDepth()
         if not main.Parent then return end
@@ -1797,11 +1800,40 @@ function Library:CreateWindow(options)
                 sectionObject.Content = elements
                 sectionObject.Layout = elementsLayout
 
+                function sectionObject:MeasureContentHeight()
+                    local visibleRows = 0
+                    local measuredHeight = 0
+
+                    for _, item in self.Items do
+                        local row = item.Row
+                        if row and row.Parent == self.Content and row.Visible then
+                            local rowHeight = row.Size.Y.Offset
+                                + (self.Content.AbsoluteSize.Y * row.Size.Y.Scale)
+                            measuredHeight += max(row.AbsoluteSize.Y, rowHeight)
+                            visibleRows += 1
+                        end
+                    end
+
+                    if visibleRows > 1 then
+                        local padding = self.Layout.Padding
+                        measuredHeight += (visibleRows - 1)
+                            * (padding.Offset + self.Content.AbsoluteSize.Y * padding.Scale)
+                    end
+
+                    return measuredHeight
+                end
+
                 function sectionObject:Refresh()
                     task.defer(function()
                         if not self.Frame.Parent then return end
 
-                        local contentHeight = self.Layout.AbsoluteContentSize.Y
+                        -- Some executor builds update UIListLayout.AbsoluteContentSize one
+                        -- frame late. Measure registered rows as a deterministic fallback so
+                        -- newly-added controls are never clipped by the card surface.
+                        local contentHeight = max(
+                            self.Layout.AbsoluteContentSize.Y,
+                            self:MeasureContentHeight()
+                        )
                         self.Content.Size = UDim2.new(1, -40, 0, contentHeight)
                         self.Frame.Size = UDim2.new(1, -4, 0, 90 + contentHeight)
                         self.Tab:RefreshCanvas()
@@ -1820,6 +1852,7 @@ function Library:CreateWindow(options)
                         FilterVisible = true,
                     }
                     insert(self.Items, item)
+                    self:Refresh()
                     return item
                 end
 

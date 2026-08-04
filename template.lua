@@ -96,6 +96,20 @@ Controls.MenuColor = Sections.ThemePreview:AddColorPicker({
 	Continuous = true,
 })
 
+-- Force one post-layout refresh for executors that report UIListLayout content
+-- size a frame late. The library also measures the rows directly as a fallback.
+local function refreshThemePreview()
+	if Controls.MenuOpacity and Controls.MenuOpacity.Row then
+		Controls.MenuOpacity.Row.LayoutOrder = 2
+		Controls.MenuOpacity.Row.Visible = true
+	end
+	Sections.ThemePreview:Refresh()
+end
+
+refreshThemePreview()
+task.defer(refreshThemePreview)
+task.delay(0.1, refreshThemePreview)
+
 Categories.Targeting = Window:AddCategory({
 	Name = "Targeting",
 	Icon = Library:GetIcon(2),
