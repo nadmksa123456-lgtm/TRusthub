@@ -3049,23 +3049,38 @@ function SectionMethods:AddTextbox(options)
         FontFace = Fonts.Regular,
     })
 
+    -- Keep the gradient on a separate surface. A UIGradient attached directly
+    -- to a TextBox also multiplies its glyph color, which made typed values
+    -- nearly invisible against dark themes.
+    local boxSurface = create("Frame", {
+        Parent = row,
+        Name = "TextboxSurface",
+        Position = fromOffset(0, 35),
+        Size = UDim2.new(1, 0, 0, 43),
+        BackgroundColor3 = Theme.Control,
+        ZIndex = 1,
+    })
+    corner(boxSurface, 7)
+    stroke(boxSurface, Theme.Border, 0.15, 1)
+    gradient(boxSurface, Theme.Control, Theme.ControlBottom, 90)
+
     local box = create("TextBox", {
         Parent = row,
         Position = fromOffset(0, 35),
         Size = UDim2.new(1, 0, 0, 43),
-        BackgroundColor3 = Theme.Control,
+        BackgroundTransparency = 1,
         ClearTextOnFocus = options.ClearOnFocus == true,
         Text = "",
         PlaceholderText = options.Placeholder or "Type here...",
         PlaceholderColor3 = Theme.Dim,
         TextColor3 = Theme.Text,
+        TextTransparency = 0,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextSize = interfaceTextSize(15),
         FontFace = Fonts.Regular,
+        ZIndex = 2,
     })
     corner(box, 7)
-    stroke(box, Theme.Border, 0.15, 1)
-    gradient(box, Theme.Control, Theme.ControlBottom, 90)
     create("UIPadding", {
         Parent = box,
         PaddingLeft = UDim.new(0, 14),
