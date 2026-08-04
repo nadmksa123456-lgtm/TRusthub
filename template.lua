@@ -149,6 +149,47 @@ Categories.Settings = Window:AddCategory({
 Tabs.Settings = Categories.Settings:AddTab({Name = "Settings", Order = 1})
 Sections.Settings = Tabs.Settings:AddSection({Name = "Menu Settings", Column = 1, Order = 1})
 Sections.SettingsExtra = Tabs.Settings:AddSection({Name = "Extra", Column = 2, Order = 1})
+Sections.MenuSettings = Sections.Settings
+
+-- Keep the Theme Preview card in Main, but move its populated controls into
+-- Menu Settings. Building them on the visible initial tab first avoids hidden
+-- page layout issues in some executors.
+local function moveControlToSection(control, targetSection, layoutOrder)
+	local sourceSection = control.Section
+	if sourceSection == targetSection then return end
+
+	local searchItem = control.SearchItem
+	if searchItem then
+		local sourceIndex = table.find(sourceSection.Items, searchItem)
+		if sourceIndex then
+			table.remove(sourceSection.Items, sourceIndex)
+		end
+		table.insert(targetSection.Items, searchItem)
+	end
+
+	control.Row.Parent = targetSection.Content
+	control.Row.LayoutOrder = layoutOrder
+	control.Section = targetSection
+
+	sourceSection:Refresh()
+	targetSection:Refresh()
+end
+
+moveControlToSection(Controls.MenuColor, Sections.MenuSettings, 1)
+moveControlToSection(Controls.MenuOpacity, Sections.MenuSettings, 2)
+
+local function refreshThemeCards()
+	Controls.MenuColor.Row.Visible = true
+	Controls.MenuOpacity.Row.Visible = true
+	Sections.ThemePreview:Refresh()
+	Sections.MenuSettings:Refresh()
+	Tabs.Main:RefreshCanvas()
+	Tabs.Settings:RefreshCanvas()
+end
+
+refreshThemeCards()
+task.defer(refreshThemeCards)
+task.delay(0.1, refreshThemeCards)
 
 return {
 	Library = Library,
