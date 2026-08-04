@@ -1537,7 +1537,7 @@ function Library:CreateWindow(options)
                     ClipsDescendants = true,
                 })
                 corner(cardSurface, 12)
-                local cardStroke = stroke(cardSurface, rgb(7, 132, 255), 0.18, 0.25)
+                local cardStroke = stroke(cardSurface, rgb(7, 132, 255), 0.12, 0.4)
                 bindTheme(cardStroke, "Color", function(theme)
                     return theme.Accent
                 end)
