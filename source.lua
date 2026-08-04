@@ -131,6 +131,10 @@ local function stroke(parent, color, transparency, thickness)
 end
 
 local function gradient(parent, topColor, bottomColor, rotation)
+    -- Roblox multiplies UIGradient colors by the GuiObject's base color.
+    -- Keep that base neutral so the requested theme colors render exactly.
+    parent.BackgroundColor3 = Theme.White
+
     return create("UIGradient", {
         Parent = parent,
         Rotation = rotation or 90,
@@ -2320,7 +2324,7 @@ function SectionMethods:AddButton(options)
         LayoutOrder = options.Order or (#self.Items + 1),
     })
     corner(button, 7)
-    stroke(button, Theme.Border, 0.15, 1)
+    local buttonStroke = stroke(button, Theme.Border, 0.15, 1)
     gradient(button, Theme.Control, Theme.ControlBottom, 90)
 
     local control = {
@@ -2358,11 +2362,11 @@ function SectionMethods:AddButton(options)
 
     button.MouseEnter:Connect(function()
         if control.Enabled then
-            tween(button, {BackgroundColor3 = Theme.ControlHover}, 0.12)
+            tween(buttonStroke, {Color = Theme.AccentSoft}, 0.12)
         end
     end)
     button.MouseLeave:Connect(function()
-        tween(button, {BackgroundColor3 = Theme.Control}, 0.12)
+        tween(buttonStroke, {Color = Theme.Border}, 0.12)
     end)
     button.Activated:Connect(function()
         control:Fire(control)
