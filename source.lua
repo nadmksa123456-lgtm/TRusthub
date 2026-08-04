@@ -120,7 +120,7 @@ local Fonts = {
 
 local Library = {
     Version = "1.1.0-dev",
-    Build = "design-card-depth-v3-contained-glow-v2",
+    Build = "design-card-depth-v3-right-corners-v1",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -888,6 +888,7 @@ function Library:CreateWindow(options)
         Size = UDim2.new(1, -sidebarWidth, 0, topbarHeight),
         BackgroundColor3 = Theme.Topbar,
     })
+    corner(topbar, 14)
 
     create("Frame", {
         Parent = topbar,
@@ -985,6 +986,7 @@ function Library:CreateWindow(options)
         BackgroundColor3 = Theme.Content,
         ClipsDescendants = true,
     })
+    corner(content, 14)
     gradient(content, Theme.Content, Theme.Window, 90)
 
     local popupLayer = create("CanvasGroup", {
