@@ -126,4 +126,15 @@ print(status[0].Ready, status[0].Path, status[0].Error)
 - `makefolder` اختياري في البيئات التي تنشئ المجلدات تلقائيًا
 - `getcustomasset` أو `getsynasset`
 
+يستخدم المنيو ملف `assets/Agenda-Semibold.ttf` كخطه الرسمي. يقوم `loader.lua`
+بتنزيله إلى مجلد الكاش، ثم يبني `Agenda-One-SemiBold.json` محليًا ويسجله عبر
+`getcustomasset` أو `getsynasset`. إذا لم يدعم الـ Executor الخطوط المحلية، يبقى
+المنيو عاملًا باستخدام الخط الاحتياطي وتظهر رسالة تحذير في الـ console.
+
+مقياس الخط الافتراضي هو `1.35`. يمكن تغييره قبل تشغيل `template.lua`:
+
+```lua
+getgenv().TRUST_MENU_FONT_SCALE = 1.4
+```
+
 إذا تعذر تحميل صورة، تبقى الواجهة عاملة وتستخدم رمزًا نصيًا للفئة بدل أن يتوقف السكربت بالكامل.
