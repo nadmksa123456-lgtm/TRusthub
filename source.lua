@@ -1869,11 +1869,61 @@ function SectionMethods:AddToggle(options)
         AnchorPoint = Vector2.new(0, 0.5),
         Position = UDim2.new(0, 4, 0.5, 0),
         Size = fromOffset(20, 20),
-        BackgroundColor3 = Theme.White,
+        BackgroundTransparency = 1,
         ZIndex = 3,
     })
-    corner(knob, 10)
-    stroke(knob, Theme.White, 0.65, 1)
+
+    local knobShadow = create("Frame", {
+        Parent = knob,
+        Name = "KnobShadow",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 1, 0.5, 2),
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = Theme.Shadow,
+        BackgroundTransparency = 0.5,
+        ZIndex = 4,
+    })
+    corner(knobShadow, 10)
+
+    local knobFace = create("Frame", {
+        Parent = knob,
+        Name = "KnobFace",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.fromScale(0.5, 0.5),
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = Theme.White,
+        ZIndex = 4,
+    })
+    corner(knobFace, 10)
+    local knobStroke = stroke(knobFace, Theme.Border:Lerp(Theme.White, 0.48), 0.12, 1)
+    create("UIGradient", {
+        Parent = knobFace,
+        Rotation = 90,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, rgb(255, 255, 255)),
+            ColorSequenceKeypoint.new(0.52, rgb(246, 248, 250)),
+            ColorSequenceKeypoint.new(1, rgb(213, 219, 226)),
+        }),
+    })
+
+    local knobHighlight = create("Frame", {
+        Parent = knobFace,
+        Name = "KnobHighlight",
+        Position = fromOffset(3, 2),
+        Size = UDim2.new(1, -7, 0, 7),
+        BackgroundColor3 = Theme.White,
+        BackgroundTransparency = 0.58,
+        ZIndex = 5,
+    })
+    corner(knobHighlight, 7)
+    create("UIGradient", {
+        Parent = knobHighlight,
+        Rotation = 0,
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.08),
+            NumberSequenceKeypoint.new(1, 0.82),
+        }),
+    })
 
     local control = {
         Section = self,
@@ -1883,6 +1933,10 @@ function SectionMethods:AddToggle(options)
         SwitchStroke = switchStroke,
         Glow = switchGlow,
         Knob = knob,
+        KnobShadow = knobShadow,
+        KnobFace = knobFace,
+        KnobStroke = knobStroke,
+        KnobHighlight = knobHighlight,
         Flag = flag,
         Value = defaultState,
         Initialized = false,
@@ -1892,17 +1946,22 @@ function SectionMethods:AddToggle(options)
         local switchColor = self.Value and Theme.Accent or Theme.Track
         local strokeColor = self.Value and Theme.AccentSoft or Theme.Border
         local labelColor = self.Value and Theme.Text or Theme.Muted
+        local knobStrokeColor = Theme.Border:Lerp(Theme.White, 0.48)
 
         if animate then
             tween(self.Switch, {BackgroundColor3 = switchColor}, 0.18, Enum.EasingStyle.Quart)
             tween(self.SwitchStroke, {Color = strokeColor}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Label, {TextColor3 = labelColor}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Glow, {BackgroundColor3 = Theme.Accent}, 0.18, Enum.EasingStyle.Quart)
+            tween(self.KnobShadow, {BackgroundColor3 = Theme.Shadow}, 0.18, Enum.EasingStyle.Quart)
+            tween(self.KnobStroke, {Color = knobStrokeColor}, 0.18, Enum.EasingStyle.Quart)
         else
             setProperties(self.Switch, {BackgroundColor3 = switchColor})
             setProperties(self.SwitchStroke, {Color = strokeColor})
             setProperties(self.Label, {TextColor3 = labelColor})
             setProperties(self.Glow, {BackgroundColor3 = Theme.Accent})
+            setProperties(self.KnobShadow, {BackgroundColor3 = Theme.Shadow})
+            setProperties(self.KnobStroke, {Color = knobStrokeColor})
         end
     end
 
@@ -1910,13 +1969,16 @@ function SectionMethods:AddToggle(options)
         self:ApplyTheme(animate)
         local knobPosition = UDim2.new(0, self.Value and 28 or 4, 0.5, 0)
         local glowTransparency = self.Value and 0.82 or 1
+        local knobShadowTransparency = self.Value and 0.44 or 0.54
 
         if animate then
             tween(self.Glow, {BackgroundTransparency = glowTransparency}, 0.18, Enum.EasingStyle.Quart)
             tween(self.Knob, {Position = knobPosition}, 0.22, Enum.EasingStyle.Quint)
+            tween(self.KnobShadow, {BackgroundTransparency = knobShadowTransparency}, 0.2, Enum.EasingStyle.Quart)
         else
             setProperties(self.Glow, {BackgroundTransparency = glowTransparency})
             setProperties(self.Knob, {Position = knobPosition})
+            setProperties(self.KnobShadow, {BackgroundTransparency = knobShadowTransparency})
         end
     end
 
