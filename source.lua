@@ -1392,6 +1392,24 @@ function Library:CreateWindow(options)
             Visible = iconAsset ~= "",
         })
 
+        -- A second aligned pass keeps the thin PNG strokes visibly white after
+        -- Roblox downsamples the 512px source to the compact sidebar size.
+        -- Both passes are tinted together, so selected icons still use Accent.
+        local iconBrightLayer = create("ImageLabel", {
+            Parent = categoryButton,
+            Name = "IconBrightLayer",
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = fromOffset(30, 30),
+            BackgroundTransparency = 1,
+            Image = iconAsset,
+            ImageColor3 = Theme.White,
+            ImageTransparency = 0.15,
+            ScaleType = Enum.ScaleType.Fit,
+            Visible = iconAsset ~= "",
+            ZIndex = 2,
+        })
+
         local iconFallback = create("TextLabel", {
             Parent = categoryButton,
             Name = "IconFallback",
@@ -1485,6 +1503,7 @@ function Library:CreateWindow(options)
         category.AccentGlowOuter = sideAccentGlowOuter
         category.AccentGlowInner = sideAccentGlowInner
         category.Icon = icon
+        category.IconBrightLayer = iconBrightLayer
         category.IconFallback = iconFallback
         category.Tooltip = tooltip
         category.TooltipStroke = tooltipStroke
@@ -1504,9 +1523,11 @@ function Library:CreateWindow(options)
             local iconColor = self.Selected and Theme.Accent or Theme.White
             if animate == false then
                 setProperties(self.Icon, {ImageColor3 = iconColor})
+                setProperties(self.IconBrightLayer, {ImageColor3 = iconColor})
                 setProperties(self.IconFallback, {TextColor3 = iconColor})
             else
                 tween(self.Icon, {ImageColor3 = iconColor}, 0.2, Enum.EasingStyle.Quart)
+                tween(self.IconBrightLayer, {ImageColor3 = iconColor}, 0.2, Enum.EasingStyle.Quart)
                 tween(self.IconFallback, {TextColor3 = iconColor}, 0.2, Enum.EasingStyle.Quart)
             end
         end
@@ -1524,6 +1545,10 @@ function Library:CreateWindow(options)
                     Position = iconPosition,
                     Size = fromOffset(iconSize, iconSize),
                 })
+                setProperties(self.IconBrightLayer, {
+                    Position = iconPosition,
+                    Size = fromOffset(iconSize, iconSize),
+                })
                 setProperties(self.IconFallback, {
                     Position = iconPosition,
                     Size = fromOffset(fallbackSize, fallbackSize),
@@ -1535,6 +1560,10 @@ function Library:CreateWindow(options)
             local easing = self.Pressed and Enum.EasingStyle.Quad or Enum.EasingStyle.Back
             tween(self.Button, {BackgroundTransparency = backgroundTransparency}, 0.14, Enum.EasingStyle.Quart)
             tween(self.Icon, {
+                Position = iconPosition,
+                Size = fromOffset(iconSize, iconSize),
+            }, duration, easing)
+            tween(self.IconBrightLayer, {
                 Position = iconPosition,
                 Size = fromOffset(iconSize, iconSize),
             }, duration, easing)
