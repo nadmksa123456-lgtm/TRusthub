@@ -60,7 +60,8 @@ local Theme = {
     Topbar = rgb(23, 29, 36),
     Content = rgb(23, 30, 37),
     Card = rgb(32, 48, 64),
-    CardBottom = rgb(31, 47, 61),
+    CardBottom = rgb(28, 40, 52),
+    Shadow = rgb(3, 8, 14),
     TabActive = rgb(19, 47, 75),
     Control = rgb(48, 71, 91),
     ControlBottom = rgb(41, 63, 82),
@@ -538,10 +539,46 @@ function Library:CreateWindow(options)
         DisplayOrder = options.DisplayOrder or 999,
     })
 
+    local initialX = floor((viewport.X - width) / 2)
+    local initialY = floor((viewport.Y - height) / 2)
+
+    local windowShadowFar = create("Frame", {
+        Parent = screenGui,
+        Name = "WindowShadowFar",
+        Position = fromOffset(initialX + 8, initialY + 13),
+        Size = fromOffset(width + 4, height + 5),
+        BackgroundColor3 = Theme.Shadow,
+        BackgroundTransparency = 0.62,
+    })
+    corner(windowShadowFar, 18)
+
+    local windowGlow = create("Frame", {
+        Parent = screenGui,
+        Name = "WindowAccentGlow",
+        Position = fromOffset(initialX - 5, initialY - 5),
+        Size = fromOffset(width + 10, height + 10),
+        BackgroundColor3 = Theme.Accent,
+        BackgroundTransparency = 0.965,
+    })
+    corner(windowGlow, 18)
+    local windowGlowStroke = stroke(windowGlow, Theme.Accent, 0.76, 2)
+    bindTheme(windowGlow, "BackgroundColor3", function(theme) return theme.Accent end)
+    bindTheme(windowGlowStroke, "Color", function(theme) return theme.Accent end)
+
+    local windowShadowNear = create("Frame", {
+        Parent = screenGui,
+        Name = "WindowShadowNear",
+        Position = fromOffset(initialX + 4, initialY + 7),
+        Size = fromOffset(width, height + 2),
+        BackgroundColor3 = Theme.Shadow,
+        BackgroundTransparency = 0.72,
+    })
+    corner(windowShadowNear, 16)
+
     local main = create("Frame", {
         Parent = screenGui,
         Name = "MainWindow",
-        Position = fromOffset(floor((viewport.X - width) / 2), floor((viewport.Y - height) / 2)),
+        Position = fromOffset(initialX, initialY),
         Size = fromOffset(width, height),
         BackgroundColor3 = Theme.Window,
         ClipsDescendants = false,
@@ -791,6 +828,9 @@ function Library:CreateWindow(options)
         Name = options.Name or "TRust Menu",
         ScreenGui = screenGui,
         Main = main,
+        WindowGlow = windowGlow,
+        WindowShadowNear = windowShadowNear,
+        WindowShadowFar = windowShadowFar,
         Sidebar = sidebar,
         Topbar = topbar,
         TopTabs = topTabs,
@@ -811,6 +851,52 @@ function Library:CreateWindow(options)
         CameraConnection = nil,
     }
     screenGui:SetAttribute("MenuName", window.Name)
+
+    local function syncWindowDepth()
+        if not main.Parent then return end
+
+        local position = main.Position
+        local size = main.Size
+        windowGlow.Position = UDim2.new(
+            position.X.Scale,
+            position.X.Offset - 5,
+            position.Y.Scale,
+            position.Y.Offset - 5
+        )
+        windowGlow.Size = UDim2.new(
+            size.X.Scale,
+            size.X.Offset + 10,
+            size.Y.Scale,
+            size.Y.Offset + 10
+        )
+        windowShadowNear.Position = UDim2.new(
+            position.X.Scale,
+            position.X.Offset + 4,
+            position.Y.Scale,
+            position.Y.Offset + 7
+        )
+        windowShadowNear.Size = UDim2.new(
+            size.X.Scale,
+            size.X.Offset,
+            size.Y.Scale,
+            size.Y.Offset + 2
+        )
+        windowShadowFar.Position = UDim2.new(
+            position.X.Scale,
+            position.X.Offset + 8,
+            position.Y.Scale,
+            position.Y.Offset + 13
+        )
+        windowShadowFar.Size = UDim2.new(
+            size.X.Scale,
+            size.X.Offset + 4,
+            size.Y.Scale,
+            size.Y.Offset + 5
+        )
+    end
+
+    connect(main:GetPropertyChangedSignal("Position"), syncWindowDepth)
+    connect(main:GetPropertyChangedSignal("Size"), syncWindowDepth)
 
     function window:FitToViewport()
         local liveCamera = Workspace.CurrentCamera or Camera
@@ -1287,15 +1373,90 @@ function Library:CreateWindow(options)
                     Parent = parentColumn,
                     Name = sectionObject.Name,
                     Size = UDim2.new(1, -4, 0, 90),
-                    BackgroundColor3 = Theme.Card,
+                    BackgroundTransparency = 1,
+                    ClipsDescendants = false,
                     LayoutOrder = sectionOptions.Order or (#self.Sections + 1),
                 })
-                corner(sectionFrame, 11)
-                stroke(sectionFrame, Theme.Border, 0.18, 1)
-                gradient(sectionFrame, Theme.Card, Theme.CardBottom, 90)
+
+                local cardShadowFar = create("Frame", {
+                    Parent = sectionFrame,
+                    Name = "ShadowFar",
+                    Position = fromOffset(0, 7),
+                    Size = UDim2.new(1, 0, 1, 2),
+                    BackgroundColor3 = Theme.Shadow,
+                    BackgroundTransparency = 0.72,
+                })
+                corner(cardShadowFar, 14)
+
+                local cardGlow = create("Frame", {
+                    Parent = sectionFrame,
+                    Name = "AccentGlow",
+                    Position = fromOffset(-3, -3),
+                    Size = UDim2.new(1, 6, 1, 6),
+                    BackgroundColor3 = Theme.Accent,
+                    BackgroundTransparency = 0.955,
+                })
+                corner(cardGlow, 14)
+                local cardGlowStroke = stroke(cardGlow, Theme.Accent, 0.82, 2)
+                bindTheme(cardGlow, "BackgroundColor3", function(theme) return theme.Accent end)
+                bindTheme(cardGlowStroke, "Color", function(theme) return theme.Accent end)
+
+                local cardShadowNear = create("Frame", {
+                    Parent = sectionFrame,
+                    Name = "ShadowNear",
+                    Position = fromOffset(0, 4),
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundColor3 = Theme.Shadow,
+                    BackgroundTransparency = 0.76,
+                })
+                corner(cardShadowNear, 12)
+
+                local cardSurface = create("Frame", {
+                    Parent = sectionFrame,
+                    Name = "Surface",
+                    Size = UDim2.fromScale(1, 1),
+                    BackgroundColor3 = Theme.Card,
+                    ClipsDescendants = true,
+                })
+                corner(cardSurface, 11)
+                local cardStroke = stroke(cardSurface, Theme.Border, 0.08, 1)
+                bindTheme(cardStroke, "Color", function(theme)
+                    return theme.Border:Lerp(theme.Accent, 0.16)
+                end)
+                gradient(cardSurface, Theme.Card, Theme.CardBottom, 90)
+
+                local cardHighlight = create("Frame", {
+                    Parent = cardSurface,
+                    Name = "TopLeftHighlight",
+                    Size = UDim2.fromScale(1, 1),
+                    BackgroundColor3 = Theme.White,
+                })
+                corner(cardHighlight, 11)
+                local cardHighlightGradient = create("UIGradient", {
+                    Parent = cardHighlight,
+                    Rotation = 32,
+                    Color = ColorSequence.new({
+                        ColorSequenceKeypoint.new(0, Theme.AccentLight),
+                        ColorSequenceKeypoint.new(0.46, Theme.Card),
+                        ColorSequenceKeypoint.new(1, Theme.CardBottom),
+                    }),
+                    Transparency = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, 0.86),
+                        NumberSequenceKeypoint.new(0.38, 0.955),
+                        NumberSequenceKeypoint.new(0.72, 0.99),
+                        NumberSequenceKeypoint.new(1, 1),
+                    }),
+                })
+                bindTheme(cardHighlightGradient, "Color", function(theme)
+                    return ColorSequence.new({
+                        ColorSequenceKeypoint.new(0, theme.AccentLight),
+                        ColorSequenceKeypoint.new(0.46, theme.Card),
+                        ColorSequenceKeypoint.new(1, theme.CardBottom),
+                    })
+                end, true)
 
                 local title = create("TextLabel", {
-                    Parent = sectionFrame,
+                    Parent = cardSurface,
                     Name = "Title",
                     Position = fromOffset(20, 16),
                     Size = UDim2.new(1, -40, 0, 26),
@@ -1309,7 +1470,7 @@ function Library:CreateWindow(options)
 
                 local titleWidth = min(260, max(92, 34 + #sectionObject.Name * 8))
                 local titleAccent = create("Frame", {
-                    Parent = sectionFrame,
+                    Parent = cardSurface,
                     Name = "TitleAccent",
                     Position = fromOffset(20, 50),
                     Size = fromOffset(titleWidth, 4),
@@ -1319,7 +1480,7 @@ function Library:CreateWindow(options)
                 bindTheme(titleAccent, "BackgroundColor3", function(theme) return theme.Accent end)
 
                 local elements = create("Frame", {
-                    Parent = sectionFrame,
+                    Parent = cardSurface,
                     Name = "Elements",
                     Position = fromOffset(20, 70),
                     Size = UDim2.new(1, -40, 0, 0),
@@ -1332,6 +1493,10 @@ function Library:CreateWindow(options)
                 })
 
                 sectionObject.Frame = sectionFrame
+                sectionObject.Surface = cardSurface
+                sectionObject.Glow = cardGlow
+                sectionObject.ShadowNear = cardShadowNear
+                sectionObject.ShadowFar = cardShadowFar
                 sectionObject.Title = title
                 sectionObject.Content = elements
                 sectionObject.Layout = elementsLayout
