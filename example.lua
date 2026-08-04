@@ -93,73 +93,36 @@ assert(type(Library) == "table", "[TRust Menu] source.lua did not return the lib
 
 local Window = Library:CreateWindow({
 	Name = "TRust Menu",
-	Size = Vector2.new(960, 680),
+	Size = Vector2.new(1000, 620),
 	ToggleKey = Enum.KeyCode.Insert,
-	ThemeColor = Color3.fromHex("#00E1FF"),
-	Logo = Icons:Resolve(0),
+	ThemeColor = Color3.fromRGB(7, 132, 255),
+	Logo = Icons:AssetId(0),
 	LogoFile = Icons:Path(0),
-	LogoSize = UDim2.fromOffset(52, 52),
-	LogoFallback = "TR",
+	LogoSize = UDim2.fromOffset(54, 54),
+	LogoFallback = "",
 	ShowBrandName = false,
 })
 
--- Category 1: Main (Cube Icon 1.png)
-local MainCategory = Window:AddCategory({
-	Name = "Main",
-	Icon = Icons:Resolve(1),
+local WorkspaceCategory = Window:AddCategory({
+	Name = "Workspace",
+	Icon = Icons:AssetId(1),
 	IconFile = Icons:Path(1),
-	Symbol = "M",
+	Symbol = "W",
 	Order = 1,
 })
 
--- Category 2: Combat (Scope Icon 2.png)
-local CombatCategory = Window:AddCategory({
-	Name = "Combat",
-	Icon = Icons:Resolve(2),
-	IconFile = Icons:Path(2),
-	Symbol = "C",
-	Order = 2,
+local GeneralTab = WorkspaceCategory:AddTab({
+	Name = "General",
+	Order = 1,
 })
 
--- Category 3: Visuals (Eye Icon 3.png)
-local VisualsCategory = Window:AddCategory({
-	Name = "Visuals",
-	Icon = Icons:Resolve(3),
-	IconFile = Icons:Path(3),
-	Symbol = "V",
-	Order = 3,
-})
+local statusLabel
+local function setStatus(message)
+	if statusLabel then
+		statusLabel:Set("Status: " .. tostring(message))
+	end
+end
 
--- Category 4: Players List (User Icon 4.png)
-local PlayersCategory = Window:AddCategory({
-	Name = "Players List",
-	Icon = Icons:Resolve(4),
-	IconFile = Icons:Path(4),
-	Symbol = "P",
-	Order = 4,
-})
-
--- Category 5: Settings (Gear Icon 5.png)
-local SettingsCategory = Window:AddCategory({
-	Name = "Settings",
-	Icon = Icons:Resolve(5),
-	IconFile = Icons:Path(5),
-	Symbol = "S",
-	Order = 5,
-})
-
----------------------------------------------------------
--- General Category Tabs
----------------------------------------------------------
-local GeneralTab = MainCategory:AddTab({ Name = "General", Order = 1 })
-local SubVisualsTab = MainCategory:AddTab({ Name = "Visuals", Order = 2 })
-local SubSettingsTab = MainCategory:AddTab({ Name = "Settings", Order = 3 })
-
----------------------------------------------------------
--- General Tab Sections (Exact match to reference image)
----------------------------------------------------------
-
--- Left Column: General Controls
 local Controls = GeneralTab:AddSection({
 	Name = "General Controls",
 	Column = 1,
@@ -168,118 +131,163 @@ local Controls = GeneralTab:AddSection({
 
 Controls:AddToggle({
 	Text = "Enable Module",
-	Flag = "enable_module",
+	Flag = "module_enabled",
 	Default = true,
-})
-
-Controls:AddToggle({
-	Text = "Smooth Movement",
-	Flag = "smooth_movement",
-	Default = false,
+	Callback = function(value)
+		setStatus(value and "module enabled" or "module disabled")
+	end,
 })
 
 Controls:AddSlider({
-	Text = "Power",
-	Flag = "power",
+	Text = "Intensity",
+	Flag = "module_intensity",
 	Min = 0,
 	Max = 100,
-	Default = 45,
+	Step = 1,
+	Default = 50,
 	Suffix = "%",
+	Callback = function(value)
+		setStatus("intensity " .. tostring(value) .. "%")
+	end,
 })
 
-Controls:AddSlider({
-	Text = "Range",
-	Flag = "range",
-	Min = 0,
-	Max = 500,
-	Default = 150,
+Controls:AddDropdown({
+	Text = "Operating Mode",
+	Flag = "operating_mode",
+	Values = {"Balanced", "Performance", "Custom"},
+	Default = "Balanced",
+	Callback = function(value)
+		setStatus("mode changed to " .. tostring(value))
+	end,
 })
 
--- Right Column: Theme Preview
-local ThemePreview = GeneralTab:AddSection({
-	Name = "Theme Preview",
+local Inputs = GeneralTab:AddSection({
+	Name = "Inputs & Actions",
 	Column = 2,
 	Order = 1,
 })
 
-ThemePreview:AddColorPicker({
-	Text = "Menu Color",
-	Flag = "menu_color",
-	Default = Color3.fromRGB(7, 132, 255),
+Inputs:AddTextbox({
+	Text = "Profile Name",
+	Flag = "profile_name",
+	Placeholder = "Enter a profile name...",
+	Default = "Default",
+	OnSubmitted = function(value, enterPressed)
+		if enterPressed then
+			setStatus("profile: " .. value)
+		end
+	end,
+})
+
+Inputs:AddKeybind({
+	Text = "Quick Action",
+	Flag = "quick_action_key",
+	Default = Enum.KeyCode.RightShift,
+	Mode = "Press",
+	Callback = function()
+		setStatus("quick action triggered")
+	end,
+})
+
+Inputs:AddButton({
+	Text = "Run Example Action",
+	Callback = function()
+		setStatus("example action completed")
+	end,
+})
+
+local Appearance = GeneralTab:AddSection({
+	Name = "Appearance",
+	Column = 2,
+	Order = 2,
+})
+
+Appearance:AddColorPicker({
+	Text = "Menu Accent",
+	Flag = "menu_accent",
+	Default = Color3.fromRGB(8, 126, 255),
 	ApplyToTheme = true,
+	Callback = function(color)
+		local hex = Library.ColorToHex and Library.ColorToHex(color) or tostring(color)
+		setStatus("theme changed to " .. hex)
+	end,
 })
 
-ThemePreview:AddCard({
-	Title = "Active Accent",
-	Value = "TRust",
+statusLabel = Appearance:AddLabel({
+	Text = "Status: ready",
+	Keywords = {"status", "information"},
 })
 
-ThemePreview:AddToggle({
-	Text = "Interface Enabled",
-	Flag = "interface_enabled",
+local ToolsTab = WorkspaceCategory:AddTab({
+	Name = "Tools",
+	Order = 2,
+})
+
+local ToolActions = ToolsTab:AddSection({
+	Name = "Tool Actions",
+	Column = 1,
+})
+
+ToolActions:AddButton({
+	Text = "Primary Tool Action",
+	Callback = function()
+		setStatus("primary tool action")
+	end,
+})
+
+local ToolOptions = ToolsTab:AddSection({
+	Name = "Tool Options",
+	Column = 2,
+})
+
+ToolOptions:AddToggle({
+	Text = "Confirm Before Running",
+	Flag = "confirm_actions",
 	Default = true,
 })
 
-ThemePreview:AddSlider({
-	Text = "Menu Opacity",
-	Flag = "menu_opacity",
-	Min = 0,
-	Max = 100,
-	Default = 92,
-	Suffix = "%",
+local InspectCategory = Window:AddCategory({
+	Name = "Inspect",
+	Icon = Icons:AssetId(2),
+	IconFile = Icons:Path(2),
+	Symbol = "I",
+	Order = 2,
 })
 
---------------------------------0-------------------------
--- Other Categories & Tabs
----------------------------------------------------------
-local SubVisualsSection = SubVisualsTab:AddSection({ Name = "Display Settings", Column = 1 })
-SubVisualsSection:AddToggle({ Text = "Show Crosshair", Flag = "show_crosshair", Default = true })
-SubVisualsSection:AddToggle({ Text = "Highlight Targets", Flag = "highlight_targets", Default = true })
-
-local SubSettingsSection = SubSettingsTab:AddSection({ Name = "Quick Configuration", Column = 1 })
-SubSettingsSection:AddKeybind({ Text = "Toggle Menu Key", Flag = "toggle_key", Default = Enum.KeyCode.Insert })
-
-local AimbotTab = CombatCategory:AddTab({ Name = "Aimbot" })
-local AimbotSection = AimbotTab:AddSection({ Name = "Aimbot Configuration", Column = 1 })
-AimbotSection:AddToggle({ Text = "Aimbot Enabled", Flag = "aimbot_enabled", Default = false })
-AimbotSection:AddSlider({ Text = "FOV Radius", Flag = "fov_radius", Min = 30, Max = 500, Default = 120 })
-
-local EspTab = VisualsCategory:AddTab({ Name = "ESP" })
-local EspSection = EspTab:AddSection({ Name = "ESP Settings", Column = 1 })
-EspSection:AddToggle({ Text = "Box ESP", Flag = "esp_box", Default = true })
-EspSection:AddToggle({ Text = "Tracers", Flag = "esp_tracers", Default = false })
-
-local PlayerTab = PlayersCategory:AddTab({ Name = "Local Player" })
-local PlayerSection = PlayerTab:AddSection({ Name = "Movement Options", Column = 1 })
-PlayerSection:AddSlider({ Text = "WalkSpeed", Flag = "walkspeed", Min = 16, Max = 250, Default = 16 })
-PlayerSection:AddSlider({ Text = "JumpPower", Flag = "jumppower", Min = 50, Max = 300, Default = 50 })
-
-local MenuConfigTab = SettingsCategory:AddTab({ Name = "Menu Config" })
-local MenuConfigSection = MenuConfigTab:AddSection({ Name = "Menu Customization", Column = 1 })
-
-MenuConfigSection:AddColorPicker({
-	Text = "Menu Color",
-	Flag = "menu_color_picker",
-	Default = Color3.fromHex("#00E1FF"),
-	ApplyToTheme = true,
-	Callback = function(color)
-		Window:SetThemeColor(color)
-	end,
+local InspectTab = InspectCategory:AddTab({Name = "Overview"})
+local InspectSection = InspectTab:AddSection({Name = "Overview", Column = 1})
+InspectSection:AddLabel({
+	Text = "Use this neutral section for information generated by your own script.",
 })
 
-MenuConfigSection:AddSlider({
-	Text = "Menu Opacity",
-	Flag = "menu_opacity_slider",
-	Min = 10,
-	Max = 100,
-	Default = 92,
-	Suffix = "%",
-	Callback = function(value)
-		Window:SetOpacity(value)
-	end,
+local ProfileCategory = Window:AddCategory({
+	Name = "Profiles",
+	Icon = Icons:AssetId(4),
+	IconFile = Icons:Path(4),
+	Symbol = "P",
+	Order = 3,
 })
 
-MenuConfigSection:AddKeybind({
+local ProfilesTab = ProfileCategory:AddTab({Name = "Profiles"})
+local ProfilesSection = ProfilesTab:AddSection({Name = "Profile Manager", Column = 1})
+ProfilesSection:AddDropdown({
+	Text = "Saved Profile",
+	Values = {"Default", "Profile 1", "Profile 2"},
+	Default = "Default",
+})
+
+local SettingsCategory = Window:AddCategory({
+	Name = "Settings",
+	Icon = Icons:AssetId(5),
+	IconFile = Icons:Path(5),
+	Symbol = "S",
+	Order = 4,
+})
+
+local SettingsTab = SettingsCategory:AddTab({Name = "Configuration"})
+local MenuSettings = SettingsTab:AddSection({Name = "Menu Settings", Column = 1})
+
+MenuSettings:AddKeybind({
 	Text = "Show / Hide Menu",
 	Default = Enum.KeyCode.Insert,
 	OnChanged = function(key)
@@ -287,7 +295,7 @@ MenuConfigSection:AddKeybind({
 	end,
 })
 
-MenuConfigSection:AddButton({
+MenuSettings:AddButton({
 	Text = "Unload Menu",
 	Callback = function()
 		Library:Unload()
