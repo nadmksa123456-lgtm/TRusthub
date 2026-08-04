@@ -73,6 +73,14 @@ Controls.Range = Sections.GeneralControls:AddSlider({
 	Default = 150,
 })
 
+-- Typography-only preview. This field does not call any game or money logic.
+Controls.AddMoneyPreview = Sections.GeneralControls:AddTextbox({
+	Text = "Add Money",
+	Flag = "preview_add_money_text",
+	Placeholder = "Enter amount...",
+	Default = "10000",
+})
+
 Controls.MenuOpacity = Sections.ThemePreview:AddSlider({
 	Text = "Menu Opacity",
 	Flag = "menu_opacity",
