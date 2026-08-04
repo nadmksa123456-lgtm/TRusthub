@@ -1,8 +1,8 @@
 --[[
-	TRust Menu - clean executor script template
+	TRust Menu - executor-ready script template
 
-	This file creates only the menu structure. Add each script's features to the
-	ready sections at the bottom of the file or through the returned Sections table.
+	The General tab includes neutral preview controls for testing the official UI.
+	Add each script's features through the returned Sections and Controls tables.
 ]]
 
 local DEFAULT_RAW_BASE = "https://raw.githubusercontent.com/nadmksa123456-lgtm/TRusthub/refs/heads/main"
@@ -28,6 +28,7 @@ local Window = Library:CreateWindow({
 local Categories = {}
 local Tabs = {}
 local Sections = {}
+local Controls = {}
 
 Categories.Main = Window:AddCategory({
 	Name = "Main",
@@ -36,8 +37,49 @@ Categories.Main = Window:AddCategory({
 	Order = 1,
 })
 Tabs.Main = Categories.Main:AddTab({Name = "General", Order = 1})
-Sections.Main = Tabs.Main:AddSection({Name = "Main", Column = 1, Order = 1})
-Sections.MainOptions = Tabs.Main:AddSection({Name = "Options", Column = 2, Order = 1})
+Sections.Main = Tabs.Main:AddSection({Name = "General Controls", Column = 1, Order = 1})
+Sections.MainOptions = Tabs.Main:AddSection({Name = "Theme Preview", Column = 2, Order = 1})
+Sections.GeneralControls = Sections.Main
+Sections.ThemePreview = Sections.MainOptions
+
+Controls.EnableModule = Sections.GeneralControls:AddToggle({
+	Text = "Enable Module",
+	Flag = "preview_module_enabled",
+	Default = true,
+})
+
+Controls.SmoothMovement = Sections.GeneralControls:AddToggle({
+	Text = "Smooth Movement",
+	Flag = "preview_smooth_movement",
+	Default = false,
+})
+
+Controls.Power = Sections.GeneralControls:AddSlider({
+	Text = "Power",
+	Flag = "preview_power",
+	Min = 0,
+	Max = 100,
+	Step = 1,
+	Default = 45,
+	Suffix = "%",
+})
+
+Controls.Range = Sections.GeneralControls:AddSlider({
+	Text = "Range",
+	Flag = "preview_range",
+	Min = 0,
+	Max = 300,
+	Step = 1,
+	Default = 150,
+})
+
+Controls.MenuColor = Sections.ThemePreview:AddColorPicker({
+	Text = "Menu Color",
+	Flag = "menu_color",
+	Default = Color3.fromRGB(7, 132, 255),
+	ApplyToTheme = true,
+	Continuous = true,
+})
 
 Categories.Targeting = Window:AddCategory({
 	Name = "Targeting",
@@ -85,4 +127,5 @@ return {
 	Categories = Categories,
 	Tabs = Tabs,
 	Sections = Sections,
+	Controls = Controls,
 }
