@@ -95,7 +95,7 @@ local Window = Library:CreateWindow({
 	Name = "TRust Menu",
 	Size = Vector2.new(960, 680),
 	ToggleKey = Enum.KeyCode.Insert,
-	ThemeColor = Color3.fromRGB(7, 132, 255),
+	ThemeColor = Color3.fromHex("#00E1FF"),
 	Logo = Icons:Resolve(0),
 	LogoFile = Icons:Path(0),
 	LogoSize = UDim2.fromOffset(52, 52),
@@ -103,12 +103,12 @@ local Window = Library:CreateWindow({
 	ShowBrandName = false,
 })
 
--- Category 1: General (Cube Icon 1.png)
-local GeneralCategory = Window:AddCategory({
-	Name = "General",
+-- Category 1: Main (Cube Icon 1.png)
+local MainCategory = Window:AddCategory({
+	Name = "Main",
 	Icon = Icons:Resolve(1),
 	IconFile = Icons:Path(1),
-	Symbol = "G",
+	Symbol = "M",
 	Order = 1,
 })
 
@@ -130,9 +130,9 @@ local VisualsCategory = Window:AddCategory({
 	Order = 3,
 })
 
--- Category 4: Players (User Icon 4.png)
+-- Category 4: Players List (User Icon 4.png)
 local PlayersCategory = Window:AddCategory({
-	Name = "Players",
+	Name = "Players List",
 	Icon = Icons:Resolve(4),
 	IconFile = Icons:Path(4),
 	Symbol = "P",
@@ -151,9 +151,9 @@ local SettingsCategory = Window:AddCategory({
 ---------------------------------------------------------
 -- General Category Tabs
 ---------------------------------------------------------
-local GeneralTab = GeneralCategory:AddTab({ Name = "General", Order = 1 })
-local SubVisualsTab = GeneralCategory:AddTab({ Name = "Visuals", Order = 2 })
-local SubSettingsTab = GeneralCategory:AddTab({ Name = "Settings", Order = 3 })
+local GeneralTab = MainCategory:AddTab({ Name = "General", Order = 1 })
+local SubVisualsTab = MainCategory:AddTab({ Name = "Visuals", Order = 2 })
+local SubSettingsTab = MainCategory:AddTab({ Name = "Settings", Order = 3 })
 
 ---------------------------------------------------------
 -- General Tab Sections (Exact match to reference image)
@@ -255,7 +255,30 @@ PlayerSection:AddSlider({ Text = "WalkSpeed", Flag = "walkspeed", Min = 16, Max 
 PlayerSection:AddSlider({ Text = "JumpPower", Flag = "jumppower", Min = 50, Max = 300, Default = 50 })
 
 local MenuConfigTab = SettingsCategory:AddTab({ Name = "Menu Config" })
-local MenuConfigSection = MenuConfigTab:AddSection({ Name = "Menu Controls", Column = 1 })
+local MenuConfigSection = MenuConfigTab:AddSection({ Name = "Menu Customization", Column = 1 })
+
+MenuConfigSection:AddColorPicker({
+	Text = "Menu Color",
+	Flag = "menu_color_picker",
+	Default = Color3.fromHex("#00E1FF"),
+	ApplyToTheme = true,
+	Callback = function(color)
+		Window:SetThemeColor(color)
+	end,
+})
+
+MenuConfigSection:AddSlider({
+	Text = "Menu Opacity",
+	Flag = "menu_opacity_slider",
+	Min = 10,
+	Max = 100,
+	Default = 92,
+	Suffix = "%",
+	Callback = function(value)
+		Window:SetOpacity(value)
+	end,
+})
+
 MenuConfigSection:AddKeybind({
 	Text = "Show / Hide Menu",
 	Default = Enum.KeyCode.Insert,
@@ -263,6 +286,7 @@ MenuConfigSection:AddKeybind({
 		Window.ToggleKey = key
 	end,
 })
+
 MenuConfigSection:AddButton({
 	Text = "Unload Menu",
 	Callback = function()
