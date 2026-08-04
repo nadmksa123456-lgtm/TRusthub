@@ -1529,39 +1529,6 @@ function Library:CreateWindow(options)
                     LayoutOrder = sectionOptions.Order or (#self.Sections + 1),
                 })
 
-                local cardShadowFar = create("Frame", {
-                    Parent = sectionFrame,
-                    Name = "ShadowFar",
-                    Position = fromOffset(0, 3),
-                    Size = UDim2.fromScale(1, 1),
-                    BackgroundColor3 = Theme.Shadow,
-                    BackgroundTransparency = 0.96,
-                })
-                corner(cardShadowFar, 13)
-
-                local cardGlow = create("Frame", {
-                    Parent = sectionFrame,
-                    Name = "AccentGlow",
-                    Position = fromOffset(-1, -1),
-                    Size = UDim2.new(1, 2, 1, 2),
-                    BackgroundColor3 = Theme.Accent,
-                    BackgroundTransparency = 1,
-                })
-                corner(cardGlow, 13)
-                local cardGlowStroke = stroke(cardGlow, Theme.Accent, 0.9, 1)
-                bindTheme(cardGlow, "BackgroundColor3", function(theme) return theme.Accent end)
-                bindTheme(cardGlowStroke, "Color", function(theme) return theme.Accent end)
-
-                local cardShadowNear = create("Frame", {
-                    Parent = sectionFrame,
-                    Name = "ShadowNear",
-                    Position = fromOffset(0, 1),
-                    Size = UDim2.fromScale(1, 1),
-                    BackgroundColor3 = Theme.Shadow,
-                    BackgroundTransparency = 0.93,
-                })
-                corner(cardShadowNear, 12)
-
                 local cardSurface = create("Frame", {
                     Parent = sectionFrame,
                     Name = "Surface",
@@ -1570,7 +1537,7 @@ function Library:CreateWindow(options)
                     ClipsDescendants = true,
                 })
                 corner(cardSurface, 12)
-                local cardStroke = stroke(cardSurface, Theme.Border, 0.4, 1)
+                local cardStroke = stroke(cardSurface, Theme.Border, 0.22, 1)
                 bindTheme(cardStroke, "Color", function(theme)
                     return theme.Border:Lerp(theme.Accent, 0.16)
                 end)
@@ -1645,9 +1612,6 @@ function Library:CreateWindow(options)
 
                 sectionObject.Frame = sectionFrame
                 sectionObject.Surface = cardSurface
-                sectionObject.Glow = cardGlow
-                sectionObject.ShadowNear = cardShadowNear
-                sectionObject.ShadowFar = cardShadowFar
                 sectionObject.Title = title
                 sectionObject.Content = elements
                 sectionObject.Layout = elementsLayout
