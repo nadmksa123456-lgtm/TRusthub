@@ -120,7 +120,7 @@ local Fonts = {
 
 local Library = {
     Version = "1.1.0-dev",
-    Build = "design-card-depth-v3-hover-v1",
+    Build = "design-card-depth-v3-tabs-v1",
     FontName = "Roboto",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
@@ -1621,6 +1621,7 @@ function Library:CreateWindow(options)
                 BackgroundTransparency = 1,
                 AutoButtonColor = false,
                 Text = tab.Name,
+                TextTransparency = 1,
                 TextColor3 = Theme.Muted,
                 TextSize = interfaceTextSize(17),
                 FontFace = Fonts.Semibold,
@@ -1633,6 +1634,26 @@ function Library:CreateWindow(options)
                 Parent = tabButton,
                 PaddingLeft = UDim.new(0, 18),
                 PaddingRight = UDim.new(0, 18),
+            })
+
+            -- Keep the button's hidden text for AutomaticSize, while the visible
+            -- label can animate without changing the top-tab layout.
+            local tabLabel = create("TextLabel", {
+                Parent = tabButton,
+                Name = "AnimatedLabel",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.fromScale(0.5, 0.5),
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                Text = tab.Name,
+                TextColor3 = Theme.Muted,
+                TextSize = interfaceTextSize(17),
+                FontFace = Fonts.Semibold,
+                ZIndex = 2,
+            })
+            local tabLabelScale = create("UIScale", {
+                Parent = tabLabel,
+                Scale = 1,
             })
 
             local underlineGlowOuter = create("Frame", {
@@ -1745,6 +1766,8 @@ function Library:CreateWindow(options)
             end)
 
             tab.Button = tabButton
+            tab.Label = tabLabel
+            tab.LabelScale = tabLabelScale
             tab.Underline = underline
             tab.UnderlineGlowOuter = underlineGlowOuter
             tab.UnderlineGlowInner = underlineGlowInner
@@ -1752,6 +1775,8 @@ function Library:CreateWindow(options)
             tab.Columns = {leftColumn, rightColumn}
             tab.RefreshCanvas = refreshPageCanvas
             tab.Selected = false
+            tab.Hovered = false
+            tab.Pressed = false
 
             window:RegisterGlow(underlineGlowOuter, "BackgroundTransparency", 0.94, function()
                 return tab.Selected
@@ -1763,20 +1788,38 @@ function Library:CreateWindow(options)
             function tab:ApplyTheme(animate)
                 local textColor = self.Selected and Theme.Accent or Theme.Muted
                 if animate == false then
-                    setProperties(self.Button, {TextColor3 = textColor})
+                    setProperties(self.Label, {TextColor3 = textColor})
                 else
-                    tween(self.Button, {TextColor3 = textColor}, 0.2, Enum.EasingStyle.Quart)
+                    tween(self.Label, {TextColor3 = textColor}, 0.2, Enum.EasingStyle.Quart)
                 end
+            end
+
+            function tab:ApplyInteractionVisual(animate)
+                local labelScale = self.Pressed and 0.93 or (self.Hovered and 1.06 or 1)
+                local labelPosition = UDim2.new(0.5, 0, 0.5, self.Pressed and 2 or 0)
+                local backgroundTransparency = self.Selected and 0
+                    or (self.Hovered and 0.42 or 1)
+
+                if animate == false then
+                    setProperties(self.Button, {BackgroundTransparency = backgroundTransparency})
+                    setProperties(self.Label, {Position = labelPosition})
+                    setProperties(self.LabelScale, {Scale = labelScale})
+                    return
+                end
+
+                local duration = self.Pressed and 0.07 or 0.16
+                local easing = self.Pressed and Enum.EasingStyle.Quad or Enum.EasingStyle.Back
+                tween(self.Button, {BackgroundTransparency = backgroundTransparency}, 0.14, Enum.EasingStyle.Quart)
+                tween(self.Label, {Position = labelPosition}, duration, easing)
+                tween(self.LabelScale, {Scale = labelScale}, duration, easing)
             end
 
             function tab:SetSelectedVisual(selected)
                 self.Selected = selected == true
-                tween(self.Button, {
-                    BackgroundTransparency = self.Selected and 0 or 1,
-                })
                 tween(self.Underline, {
                     BackgroundTransparency = self.Selected and 0 or 1,
                 })
+                self:ApplyInteractionVisual(true)
                 self:ApplyTheme(true)
                 self.Window:RefreshGlowVisuals(true)
             end
@@ -1800,8 +1843,45 @@ function Library:CreateWindow(options)
                 self:SetSelectedVisual(true)
             end
 
+            tabButton.MouseEnter:Connect(function()
+                tab.Hovered = true
+                tab:ApplyInteractionVisual(true)
+            end)
+
+            tabButton.MouseLeave:Connect(function()
+                tab.Hovered = false
+                tab.Pressed = false
+                tab:ApplyInteractionVisual(true)
+            end)
+
+            tabButton.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                    or input.UserInputType == Enum.UserInputType.Touch then
+                    tab.Pressed = true
+                    tab:ApplyInteractionVisual(true)
+                end
+            end)
+
+            tabButton.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                    or input.UserInputType == Enum.UserInputType.Touch then
+                    tab.Pressed = false
+                    tab:ApplyInteractionVisual(true)
+                end
+            end)
+
+            connect(tabButton:GetPropertyChangedSignal("Visible"), function()
+                if not tabButton.Visible then
+                    tab.Hovered = false
+                    tab.Pressed = false
+                    tab:ApplyInteractionVisual(false)
+                end
+            end)
+
             tabButton.Activated:Connect(function()
+                tab.Pressed = false
                 tab:Select()
+                tab:ApplyInteractionVisual(true)
             end)
 
             insert(self.Tabs, tab)
