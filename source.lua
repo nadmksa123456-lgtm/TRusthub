@@ -52,25 +52,27 @@ end
 local customAsset = getcustomasset or getsynasset
 
 local Theme = {
-    Accent = rgb(0, 132, 255),
-    AccentSoft = rgb(0, 86, 170),
-    AccentLight = rgb(72, 169, 255),
-    Window = rgb(2, 12, 20),
-    Sidebar = rgb(2, 11, 18),
-    Topbar = rgb(3, 14, 23),
-    Content = rgb(2, 13, 22),
-    Card = rgb(8, 24, 36),
-    CardBottom = rgb(7, 20, 31),
-    TabActive = rgb(7, 27, 43),
-    Control = rgb(25, 49, 72),
-    ControlBottom = rgb(20, 41, 61),
-    ControlHover = rgb(31, 61, 90),
-    Track = rgb(29, 52, 73),
-    Border = rgb(18, 42, 58),
-    Text = rgb(244, 247, 251),
-    Muted = rgb(159, 170, 187),
-    Dim = rgb(101, 116, 136),
-    White = rgb(255, 255, 255),
+    Accent = Color3.fromHex("#00E1FF"),
+    AccentSoft = Color3.fromHex("#00B7D1"),
+    AccentLight = Color3.fromHex("#38EAFF"),
+    Window = Color3.fromHex("#161F20"),
+    Sidebar = Color3.fromHex("#162224"),
+    Topbar = Color3.fromHex("#162224"),
+    Content = Color3.fromHex("#161F20"),
+    Card = Color3.fromHex("#21393D"),
+    CardBottom = Color3.fromHex("#21393D"),
+    Elevated = Color3.fromHex("#22363A"),
+    TabActive = Color3.fromHex("#24484E"),
+    Control = Color3.fromHex("#21393D"),
+    ControlBottom = Color3.fromHex("#21393D"),
+    ControlHover = Color3.fromHex("#24484E"),
+    Track = Color3.fromHex("#396E76"),
+    ToggleOff = Color3.fromHex("#396E76"),
+    Border = Color3.fromHex("#396E76"),
+    Text = Color3.fromHex("#FFFFFF"),
+    Muted = Color3.fromHex("#D9DDDE"),
+    Dim = Color3.fromHex("#8A9A9C"),
+    White = Color3.fromHex("#FFFFFF"),
 }
 
 local Fonts = {
@@ -281,10 +283,10 @@ function Library:SetThemeColor(value, animate)
     end
 
     Theme.Accent = color
-    Theme.AccentSoft = color:Lerp(rgb(0, 0, 0), 0.34)
-    Theme.AccentLight = color:Lerp(Theme.White, 0.24)
-    Theme.TabActive = Theme.Content:Lerp(color, 0.10)
-    Theme.ControlHover = Theme.Control:Lerp(color, 0.14)
+    Theme.AccentSoft = color:Lerp(rgb(0, 0, 0), 0.19)
+    Theme.AccentLight = color:Lerp(Theme.White, 0.22)
+    Theme.TabActive = Color3.fromHex("#24484E")
+    Theme.ControlHover = Color3.fromHex("#24484E")
 
     for index = #self.ThemeBindings, 1, -1 do
         local binding = self.ThemeBindings[index]
@@ -574,8 +576,8 @@ function Library:CreateWindow(options)
         ClipsDescendants = false,
     })
     corner(main, 10)
-    stroke(main, Theme.Border, 0.05, 1)
-    gradient(main, Theme.Window, Theme.Content, 90)
+    stroke(main, Theme.Border, 0.35, 1)
+    local mainGradient = gradient(main, Theme.Window, Theme.Content, 90)
 
     local sidebar = create("Frame", {
         Parent = main,
@@ -593,6 +595,7 @@ function Library:CreateWindow(options)
         Position = UDim2.new(1, 0, 0, 0),
         Size = UDim2.new(0, 1, 1, 0),
         BackgroundColor3 = Theme.Border,
+        BackgroundTransparency = 0.4,
     })
 
     local logoZone = create("Frame", {
@@ -714,6 +717,7 @@ function Library:CreateWindow(options)
         Position = UDim2.new(0, 0, 1, 0),
         Size = UDim2.new(1, 0, 0, 1),
         BackgroundColor3 = Theme.Border,
+        BackgroundTransparency = 0.4,
     })
 
     local topTabs = create("ScrollingFrame", {
@@ -749,7 +753,7 @@ function Library:CreateWindow(options)
         FontFace = Fonts.Regular,
     })
     corner(searchButton, 9)
-    stroke(searchButton, Theme.Border, 0.15, 1)
+    stroke(searchButton, Theme.Border, 0.35, 1)
     bindTheme(searchButton, "BackgroundColor3", function(theme) return theme.TabActive end)
 
     local searchLens = create("Frame", {
@@ -775,7 +779,7 @@ function Library:CreateWindow(options)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -14, 0.5, 0),
         Size = fromOffset(230, 42),
-        BackgroundColor3 = Theme.ControlBottom,
+        BackgroundColor3 = Theme.Elevated,
         Text = "",
         PlaceholderText = "Search controls...",
         PlaceholderColor3 = Theme.Dim,
@@ -788,7 +792,7 @@ function Library:CreateWindow(options)
         ZIndex = 20,
     })
     corner(searchBox, 8)
-    stroke(searchBox, Theme.Border, 0, 1)
+    stroke(searchBox, Theme.Border, 0.35, 1)
     create("UIPadding", {
         Parent = searchBox,
         PaddingLeft = UDim.new(0, 14),
@@ -803,7 +807,7 @@ function Library:CreateWindow(options)
         BackgroundColor3 = Theme.Content,
         ClipsDescendants = true,
     })
-    gradient(content, Theme.Content, Theme.Window, 90)
+    local contentGradient = gradient(content, Theme.Content, Theme.Window, 90)
 
     local popupLayer = create("Frame", {
         Parent = screenGui,
@@ -899,6 +903,36 @@ function Library:CreateWindow(options)
     end
 
     window.SetAccent = window.SetThemeColor
+
+    function window:SetOpacity(percent)
+        local factor = clamp(tonumber(percent) or 100, 10, 100) / 100
+        local darkRatio = 1 - factor
+
+        local wColor = Theme.Window:Lerp(rgb(0, 0, 0), darkRatio * 0.85)
+        local cColor = Theme.Content:Lerp(rgb(0, 0, 0), darkRatio * 0.85)
+        local sColor = Theme.Sidebar:Lerp(rgb(0, 0, 0), darkRatio * 0.85)
+        local tColor = Theme.Topbar:Lerp(rgb(0, 0, 0), darkRatio * 0.85)
+
+        main.BackgroundColor3 = wColor
+        sidebar.BackgroundColor3 = sColor
+        topbar.BackgroundColor3 = tColor
+        content.BackgroundColor3 = cColor
+
+        if mainGradient then
+            mainGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, wColor),
+                ColorSequenceKeypoint.new(1, cColor),
+            })
+        end
+        if contentGradient then
+            contentGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, cColor),
+                ColorSequenceKeypoint.new(1, wColor),
+            })
+        end
+    end
+
+    window.SetBrightness = window.SetOpacity
 
     function window:GetThemeColor()
         return Theme.Accent
@@ -1318,8 +1352,8 @@ function Library:CreateWindow(options)
                     LayoutOrder = sectionOptions.Order or (#self.Sections + 1),
                 })
                 corner(sectionFrame, 8)
-                stroke(sectionFrame, Theme.Border, 0.18, 1)
-                gradient(sectionFrame, Theme.Card, Theme.CardBottom, 90)
+                stroke(sectionFrame, Theme.Border, 0.35, 1)
+                gradient(sectionFrame, Theme.Card, Theme.Elevated, 90)
 
                 local title = create("TextLabel", {
                     Parent = sectionFrame,
@@ -1602,7 +1636,7 @@ function SectionMethods:AddToggle(options)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, 0, 0.5, 0),
         Size = fromOffset(52, 28),
-        BackgroundColor3 = Theme.Track,
+        BackgroundColor3 = Theme.ToggleOff,
         ZIndex = 2,
     })
     corner(switch, 14)
@@ -1634,7 +1668,7 @@ function SectionMethods:AddToggle(options)
     }
 
     function control:ApplyTheme(animate)
-        local switchColor = self.Value and Theme.Accent or Theme.Track
+        local switchColor = self.Value and Theme.Accent or Theme.ToggleOff
         local strokeColor = self.Value and Theme.AccentSoft or Theme.Border
         local labelColor = self.Value and Theme.Text or Theme.Muted
         local statusValue = self.Value and "ON" or "OFF"
@@ -1764,7 +1798,7 @@ function SectionMethods:AddSlider(options)
         Size = UDim2.new(1, -94, 0, 25),
         BackgroundTransparency = 1,
         Text = text,
-        TextColor3 = Theme.Text,
+        TextColor3 = Theme.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextSize = 15,
         FontFace = Fonts.Semibold,
@@ -1777,7 +1811,7 @@ function SectionMethods:AddSlider(options)
         Size = fromOffset(90, 25),
         BackgroundTransparency = 1,
         Text = "",
-        TextColor3 = Theme.Text,
+        TextColor3 = Theme.Accent,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextSize = 15,
         FontFace = Fonts.Semibold,
@@ -1804,7 +1838,7 @@ function SectionMethods:AddSlider(options)
     local fill = create("Frame", {
         Parent = rail,
         Size = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = Theme.White,
+        BackgroundColor3 = Theme.Accent,
     })
     corner(fill, 6)
 
@@ -2021,7 +2055,7 @@ function SectionMethods:AddDropdown(options)
         Parent = row,
         Position = fromOffset(0, 35),
         Size = UDim2.new(1, 0, 0, 43),
-        BackgroundColor3 = Theme.Control,
+        BackgroundColor3 = Theme.Elevated,
         AutoButtonColor = false,
         Text = "",
         TextColor3 = Theme.Text,
@@ -2030,8 +2064,8 @@ function SectionMethods:AddDropdown(options)
         FontFace = Fonts.Regular,
     })
     corner(field, 7)
-    stroke(field, Theme.Border, 0.15, 1)
-    gradient(field, Theme.Control, Theme.ControlBottom, 90)
+    stroke(field, Theme.Border, 0.35, 1)
+    gradient(field, Theme.Elevated, Theme.ControlHover, 90)
     create("UIPadding", {
         Parent = field,
         PaddingLeft = UDim.new(0, 14),
@@ -2066,7 +2100,7 @@ function SectionMethods:AddDropdown(options)
     })
     bindTheme(popup, "ScrollBarImageColor3", function(theme) return theme.Accent end)
     corner(popup, 7)
-    stroke(popup, Theme.Border, 0, 1)
+    stroke(popup, Theme.Border, 0.35, 1)
     create("UIPadding", {
         Parent = popup,
         PaddingTop = UDim.new(0, 4),
@@ -2269,7 +2303,7 @@ function SectionMethods:AddTextbox(options)
         Parent = row,
         Position = fromOffset(0, 35),
         Size = UDim2.new(1, 0, 0, 43),
-        BackgroundColor3 = Theme.Control,
+        BackgroundColor3 = Theme.Elevated,
         ClearTextOnFocus = options.ClearOnFocus == true,
         Text = "",
         PlaceholderText = options.Placeholder or "Type here...",
@@ -2280,8 +2314,8 @@ function SectionMethods:AddTextbox(options)
         FontFace = Fonts.Regular,
     })
     corner(box, 7)
-    stroke(box, Theme.Border, 0.15, 1)
-    gradient(box, Theme.Control, Theme.ControlBottom, 90)
+    stroke(box, Theme.Border, 0.35, 1)
+    gradient(box, Theme.Elevated, Theme.ControlHover, 90)
     create("UIPadding", {
         Parent = box,
         PaddingLeft = UDim.new(0, 14),
@@ -2362,7 +2396,7 @@ function SectionMethods:AddButton(options)
         Parent = self.Content,
         Name = text,
         Size = UDim2.new(1, 0, 0, 45),
-        BackgroundColor3 = Theme.Control,
+        BackgroundColor3 = Theme.Elevated,
         AutoButtonColor = false,
         Text = text,
         TextColor3 = Theme.Text,
@@ -2371,8 +2405,8 @@ function SectionMethods:AddButton(options)
         LayoutOrder = options.Order or (#self.Items + 1),
     })
     corner(button, 7)
-    stroke(button, Theme.Border, 0.15, 1)
-    gradient(button, Theme.Control, Theme.ControlBottom, 90)
+    stroke(button, Theme.Border, 0.35, 1)
+    gradient(button, Theme.Elevated, Theme.ControlHover, 90)
 
     local control = {
         Section = self,
@@ -2413,7 +2447,7 @@ function SectionMethods:AddButton(options)
         end
     end)
     button.MouseLeave:Connect(function()
-        tween(button, {BackgroundColor3 = Theme.Control}, 0.12)
+        tween(button, {BackgroundColor3 = Theme.Elevated}, 0.12)
     end)
     button.Activated:Connect(function()
         control:Fire(control)
@@ -2514,7 +2548,7 @@ function SectionMethods:AddKeybind(options)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, 0, 0.5, 0),
         Size = fromOffset(104, 30),
-        BackgroundColor3 = Theme.ControlBottom,
+        BackgroundColor3 = Theme.ControlHover,
         AutoButtonColor = false,
         Text = "",
         TextColor3 = Theme.Text,
@@ -2522,7 +2556,7 @@ function SectionMethods:AddKeybind(options)
         FontFace = Fonts.Semibold,
     })
     corner(bindButton, 6)
-    stroke(bindButton, Theme.Border, 0.1, 1)
+    stroke(bindButton, Theme.Border, 0.35, 1)
 
     local control = {
         Section = self,
@@ -2705,12 +2739,12 @@ function SectionMethods:AddColorPicker(options)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, 0, 0.5, 0),
         Size = fromOffset(118, 32),
-        BackgroundColor3 = Theme.Control,
+        BackgroundColor3 = Theme.Elevated,
         AutoButtonColor = false,
         Text = "",
     })
     corner(field, 7)
-    local fieldStroke = stroke(field, Theme.Border, 0.1, 1)
+    local fieldStroke = stroke(field, Theme.Border, 0.35, 1)
 
     local swatch = create("Frame", {
         Parent = field,
@@ -2746,7 +2780,7 @@ function SectionMethods:AddColorPicker(options)
         ZIndex = 120,
     })
     corner(popup, 10)
-    local popupStroke = stroke(popup, Theme.Border, 0, 1)
+    local popupStroke = stroke(popup, Theme.Border, 0.35, 1)
     local popupScale = create("UIScale", {
         Parent = popup,
         Scale = 0.97,
@@ -3066,7 +3100,7 @@ function SectionMethods:AddColorPicker(options)
         tween(field, {BackgroundColor3 = Theme.ControlHover}, 0.12, Enum.EasingStyle.Quart)
     end)
     field.MouseLeave:Connect(function()
-        tween(field, {BackgroundColor3 = Theme.Control}, 0.12, Enum.EasingStyle.Quart)
+        tween(field, {BackgroundColor3 = Theme.Elevated}, 0.12, Enum.EasingStyle.Quart)
     end)
     field.Activated:Connect(function()
         if control.IsOpen then control:Close() else control:Open() end
@@ -3113,12 +3147,12 @@ function SectionMethods:AddCard(options)
         Parent = self.Content,
         Name = title,
         Size = UDim2.new(1, 0, 0, 56),
-        BackgroundColor3 = Theme.Control,
+        BackgroundColor3 = Theme.Elevated,
         LayoutOrder = options.Order or (#self.Items + 1),
     })
     corner(card, 8)
-    stroke(card, Theme.Border, 0.15, 1)
-    gradient(card, Theme.Control, Theme.ControlBottom, 90)
+    stroke(card, Theme.Border, 0.35, 1)
+    gradient(card, Theme.Elevated, Theme.ControlHover, 90)
 
     local titleLabel = create("TextLabel", {
         Parent = card,
