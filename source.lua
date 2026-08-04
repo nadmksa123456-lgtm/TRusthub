@@ -94,9 +94,9 @@ local SurfaceThemeRoles = {
     "Dim",
 }
 
-local SOURCE_SANS = "rbxasset://fonts/families/SourceSansPro.json"
+local ROBOTO = "rbxasset://fonts/families/Roboto.json"
 local GOTHAM_FALLBACK = "rbxasset://fonts/families/GothamSSm.json"
-local INTERFACE_FONT = tostring(environment.TRUST_MENU_FONT_FAMILY or SOURCE_SANS)
+local INTERFACE_FONT = tostring(environment.TRUST_MENU_FONT_FAMILY or ROBOTO)
 local TYPOGRAPHY_SCALE = 1.2
 
 local function interfaceFont(weight)
@@ -111,12 +111,12 @@ local function interfaceTextSize(size)
     return floor(size * TYPOGRAPHY_SCALE + 0.5)
 end
 
--- Source Sans Pro has the larger, neutral UI proportions of the simulator's
--- system font. A custom Roblox FontFamily can override it through the executor.
+-- Roboto provides wider, clearer UI letterforms than the previous face.
+-- A custom Roblox FontFamily can still override it through the executor.
 local Fonts = {
-    Regular = interfaceFont(Enum.FontWeight.Regular),
-    Semibold = interfaceFont(Enum.FontWeight.Medium),
-    Bold = interfaceFont(Enum.FontWeight.SemiBold),
+    Regular = interfaceFont(Enum.FontWeight.Medium),
+    Semibold = interfaceFont(Enum.FontWeight.SemiBold),
+    Bold = interfaceFont(Enum.FontWeight.Bold),
 }
 
 local Library = {
