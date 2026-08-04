@@ -1537,6 +1537,10 @@ function Library:CreateWindow(options)
                     ClipsDescendants = true,
                 })
                 corner(cardSurface, 12)
+                local cardStroke = stroke(cardSurface, rgb(7, 132, 255), 0.18, 0.25)
+                bindTheme(cardStroke, "Color", function(theme)
+                    return theme.Accent
+                end)
                 gradient(cardSurface, Theme.Card, Theme.CardBottom, 90)
 
                 local cardHighlight = create("Frame", {
