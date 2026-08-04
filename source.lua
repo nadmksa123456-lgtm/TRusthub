@@ -1387,7 +1387,7 @@ function Library:CreateWindow(options)
             Size = fromOffset(30, 30),
             BackgroundTransparency = 1,
             Image = iconAsset,
-            ImageColor3 = Theme.Muted,
+            ImageColor3 = Theme.White,
             ScaleType = Enum.ScaleType.Fit,
             Visible = iconAsset ~= "",
         })
@@ -1400,7 +1400,7 @@ function Library:CreateWindow(options)
             Size = fromOffset(34, 34),
             BackgroundTransparency = 1,
             Text = categoryOptions.Symbol or string.sub(category.Name, 1, 1),
-            TextColor3 = Theme.Muted,
+            TextColor3 = Theme.White,
             TextSize = interfaceTextSize(19),
             FontFace = Fonts.Bold,
             Visible = iconAsset == "",
@@ -1501,7 +1501,7 @@ function Library:CreateWindow(options)
         end)
 
         function category:ApplyTheme(animate)
-            local iconColor = self.Selected and Theme.Accent or Theme.Muted
+            local iconColor = self.Selected and Theme.Accent or Theme.White
             if animate == false then
                 setProperties(self.Icon, {ImageColor3 = iconColor})
                 setProperties(self.IconFallback, {TextColor3 = iconColor})
