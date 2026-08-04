@@ -74,6 +74,26 @@ local Theme = {
     White = rgb(255, 255, 255),
 }
 
+-- Accent roles are updated through bindings/listeners. These surface roles are
+-- recolored as a complete palette so Menu Color changes the whole interface.
+local SurfaceThemeRoles = {
+    "Window",
+    "Sidebar",
+    "Topbar",
+    "Content",
+    "Card",
+    "CardBottom",
+    "Shadow",
+    "TabActive",
+    "Control",
+    "ControlBottom",
+    "ControlHover",
+    "Track",
+    "Border",
+    "Muted",
+    "Dim",
+}
+
 local Fonts = {
     Regular = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
     Semibold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
@@ -278,6 +298,116 @@ local function onThemeChanged(owner, callback)
     return listener
 end
 
+local function colorsClose(first, second)
+    return math.abs(first.R - second.R) < 0.0001
+        and math.abs(first.G - second.G) < 0.0001
+        and math.abs(first.B - second.B) < 0.0001
+end
+
+local function snapshotSurfaceTheme()
+    local snapshot = {}
+    for _, role in SurfaceThemeRoles do
+        snapshot[role] = Theme[role]
+    end
+    return snapshot
+end
+
+local function remapSurfaceColor(color, previousTheme)
+    for _, role in SurfaceThemeRoles do
+        local previous = previousTheme[role]
+        if previous and colorsClose(color, previous) then
+            return Theme[role]
+        end
+    end
+    return color
+end
+
+local function remapGradient(sequence, previousTheme)
+    local changed = false
+    local keypoints = {}
+    for _, keypoint in sequence.Keypoints do
+        local nextColor = remapSurfaceColor(keypoint.Value, previousTheme)
+        if not colorsClose(nextColor, keypoint.Value) then changed = true end
+        insert(keypoints, ColorSequenceKeypoint.new(keypoint.Time, nextColor))
+    end
+    return changed and ColorSequence.new(keypoints) or sequence
+end
+
+local function applySurfaceTheme(library, previousTheme)
+    for _, window in library.Windows do
+        local screenGui = window.ScreenGui
+        if screenGui and screenGui.Parent then
+            for _, object in screenGui:GetDescendants() do
+                if object:IsA("GuiObject") then
+                    local nextBackground = remapSurfaceColor(object.BackgroundColor3, previousTheme)
+                    if not colorsClose(nextBackground, object.BackgroundColor3) then
+                        setProperties(object, {BackgroundColor3 = nextBackground})
+                    end
+                end
+
+                if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then
+                    local nextText = remapSurfaceColor(object.TextColor3, previousTheme)
+                    if not colorsClose(nextText, object.TextColor3) then
+                        setProperties(object, {TextColor3 = nextText})
+                    end
+                    if object:IsA("TextBox") then
+                        local nextPlaceholder = remapSurfaceColor(object.PlaceholderColor3, previousTheme)
+                        if not colorsClose(nextPlaceholder, object.PlaceholderColor3) then
+                            setProperties(object, {PlaceholderColor3 = nextPlaceholder})
+                        end
+                    end
+                elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
+                    local nextImage = remapSurfaceColor(object.ImageColor3, previousTheme)
+                    if not colorsClose(nextImage, object.ImageColor3) then
+                        setProperties(object, {ImageColor3 = nextImage})
+                    end
+                end
+
+                if object:IsA("ScrollingFrame") then
+                    local nextScroll = remapSurfaceColor(object.ScrollBarImageColor3, previousTheme)
+                    if not colorsClose(nextScroll, object.ScrollBarImageColor3) then
+                        setProperties(object, {ScrollBarImageColor3 = nextScroll})
+                    end
+                elseif object:IsA("UIStroke") then
+                    local nextStroke = remapSurfaceColor(object.Color, previousTheme)
+                    if not colorsClose(nextStroke, object.Color) then
+                        setProperties(object, {Color = nextStroke})
+                    end
+                elseif object:IsA("UIGradient") then
+                    local nextSequence = remapGradient(object.Color, previousTheme)
+                    if nextSequence ~= object.Color then
+                        setProperties(object, {Color = nextSequence})
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function deriveSurfaceTheme(color)
+    local hue, saturation = Color3.toHSV(color)
+    local influence = clamp(saturation, 0, 1)
+    local function tone(roleSaturation, brightness)
+        return Color3.fromHSV(hue, clamp(roleSaturation * influence, 0, 1), brightness)
+    end
+
+    Theme.Window = tone(0.36, 0.141)
+    Theme.Sidebar = tone(0.26, 0.122)
+    Theme.Topbar = Theme.Window
+    Theme.Content = tone(0.38, 0.145)
+    Theme.Card = tone(0.50, 0.251)
+    Theme.CardBottom = tone(0.46, 0.204)
+    Theme.Shadow = tone(0.78, 0.055)
+    Theme.Control = tone(0.47, 0.357)
+    Theme.ControlBottom = tone(0.50, 0.322)
+    Theme.Track = tone(0.21, 0.318)
+    Theme.Border = tone(0.66, 0.353)
+    Theme.Muted = tone(0.08, 0.647)
+    Theme.Dim = tone(0.20, 0.498)
+    Theme.TabActive = Theme.Content:Lerp(color, 0.10)
+    Theme.ControlHover = Theme.Control:Lerp(color, 0.14)
+end
+
 function Library:SetThemeColor(value, animate)
     local color = parseColor(value)
     if not color then
@@ -285,11 +415,12 @@ function Library:SetThemeColor(value, animate)
         return self.Theme.Accent
     end
 
+    local previousTheme = snapshotSurfaceTheme()
     Theme.Accent = color
     Theme.AccentSoft = color:Lerp(rgb(0, 0, 0), 0.34)
     Theme.AccentLight = color:Lerp(Theme.White, 0.24)
-    Theme.TabActive = Theme.Content:Lerp(color, 0.10)
-    Theme.ControlHover = Theme.Control:Lerp(color, 0.14)
+    deriveSurfaceTheme(color)
+    applySurfaceTheme(self, previousTheme)
 
     for index = #self.ThemeBindings, 1, -1 do
         local binding = self.ThemeBindings[index]
