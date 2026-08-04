@@ -1532,33 +1532,33 @@ function Library:CreateWindow(options)
                 local cardShadowFar = create("Frame", {
                     Parent = sectionFrame,
                     Name = "ShadowFar",
-                    Position = fromOffset(0, 7),
-                    Size = UDim2.new(1, 0, 1, 2),
+                    Position = fromOffset(0, 3),
+                    Size = UDim2.fromScale(1, 1),
                     BackgroundColor3 = Theme.Shadow,
-                    BackgroundTransparency = 0.72,
+                    BackgroundTransparency = 0.96,
                 })
-                corner(cardShadowFar, 14)
+                corner(cardShadowFar, 13)
 
                 local cardGlow = create("Frame", {
                     Parent = sectionFrame,
                     Name = "AccentGlow",
-                    Position = fromOffset(-3, -3),
-                    Size = UDim2.new(1, 6, 1, 6),
+                    Position = fromOffset(-1, -1),
+                    Size = UDim2.new(1, 2, 1, 2),
                     BackgroundColor3 = Theme.Accent,
-                    BackgroundTransparency = 0.955,
+                    BackgroundTransparency = 1,
                 })
-                corner(cardGlow, 14)
-                local cardGlowStroke = stroke(cardGlow, Theme.Accent, 0.82, 2)
+                corner(cardGlow, 13)
+                local cardGlowStroke = stroke(cardGlow, Theme.Accent, 0.9, 1)
                 bindTheme(cardGlow, "BackgroundColor3", function(theme) return theme.Accent end)
                 bindTheme(cardGlowStroke, "Color", function(theme) return theme.Accent end)
 
                 local cardShadowNear = create("Frame", {
                     Parent = sectionFrame,
                     Name = "ShadowNear",
-                    Position = fromOffset(0, 4),
-                    Size = UDim2.new(1, 0, 1, 0),
+                    Position = fromOffset(0, 1),
+                    Size = UDim2.fromScale(1, 1),
                     BackgroundColor3 = Theme.Shadow,
-                    BackgroundTransparency = 0.76,
+                    BackgroundTransparency = 0.93,
                 })
                 corner(cardShadowNear, 12)
 
@@ -1569,8 +1569,8 @@ function Library:CreateWindow(options)
                     BackgroundColor3 = Theme.Card,
                     ClipsDescendants = true,
                 })
-                corner(cardSurface, 11)
-                local cardStroke = stroke(cardSurface, Theme.Border, 0.08, 1)
+                corner(cardSurface, 12)
+                local cardStroke = stroke(cardSurface, Theme.Border, 0.4, 1)
                 bindTheme(cardStroke, "Color", function(theme)
                     return theme.Border:Lerp(theme.Accent, 0.16)
                 end)
@@ -1582,7 +1582,7 @@ function Library:CreateWindow(options)
                     Size = UDim2.fromScale(1, 1),
                     BackgroundColor3 = Theme.White,
                 })
-                corner(cardHighlight, 11)
+                corner(cardHighlight, 12)
                 local cardHighlightGradient = create("UIGradient", {
                     Parent = cardHighlight,
                     Rotation = 32,
