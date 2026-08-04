@@ -38,7 +38,10 @@ Categories.Main = Window:AddCategory({
 })
 Tabs.Main = Categories.Main:AddTab({Name = "General", Order = 1})
 Sections.Main = Tabs.Main:AddSection({Name = "General Controls", Column = 1, Order = 1})
+Sections.MainOptions = Tabs.Main:AddSection({Name = "Menu Settings", Column = 2, Order = 1})
 Sections.GeneralControls = Sections.Main
+Sections.ThemePreview = Sections.MainOptions
+Sections.MenuSettings = Sections.MainOptions
 
 Controls.EnableModule = Sections.GeneralControls:AddToggle({
 	Text = "Enable Module",
@@ -70,6 +73,43 @@ Controls.Range = Sections.GeneralControls:AddSlider({
 	Step = 1,
 	Default = 150,
 })
+
+-- Build these controls while the initial tab is active, then move the complete
+-- card into Settings after all categories have been created. This keeps the
+-- card's calculated size intact on executors that do not lay out hidden pages.
+Controls.MenuOpacity = Sections.MenuSettings:AddSlider({
+	Text = "Menu Opacity",
+	Flag = "menu_opacity",
+	Order = 2,
+	Min = 20,
+	Max = 100,
+	Step = 1,
+	Default = 100,
+	Suffix = "%",
+	Callback = function(value)
+		Window:SetOpacity(value, true)
+	end,
+})
+
+Controls.MenuColor = Sections.MenuSettings:AddColorPicker({
+	Text = "Menu Color",
+	Flag = "menu_color",
+	Order = 1,
+	Default = Color3.fromRGB(7, 132, 255),
+	ApplyToTheme = true,
+	Continuous = true,
+})
+
+local function refreshMenuSettings()
+	if Controls.MenuOpacity and Controls.MenuOpacity.Row then
+		Controls.MenuOpacity.Row.LayoutOrder = 2
+		Controls.MenuOpacity.Row.Visible = true
+	end
+	Sections.MenuSettings:Refresh()
+end
+
+refreshMenuSettings()
+task.defer(refreshMenuSettings)
 
 Categories.Targeting = Window:AddCategory({
 	Name = "Targeting",
@@ -108,47 +148,22 @@ Categories.Settings = Window:AddCategory({
 	Order = 5,
 })
 Tabs.Settings = Categories.Settings:AddTab({Name = "Settings", Order = 1})
-Sections.Settings = Tabs.Settings:AddSection({Name = "Menu Settings", Column = 1, Order = 1})
-Sections.SettingsExtra = Tabs.Settings:AddSection({Name = "Extra", Column = 2, Order = 1})
-Sections.MenuSettings = Sections.Settings
 
--- Backward-compatible aliases now point to the official Settings card.
-Sections.MainOptions = Sections.Settings
-Sections.ThemePreview = Sections.Settings
-
-Controls.MenuOpacity = Sections.MenuSettings:AddSlider({
-	Text = "Menu Opacity",
-	Flag = "menu_opacity",
-	Order = 2,
-	Min = 20,
-	Max = 100,
-	Step = 1,
-	Default = 100,
-	Suffix = "%",
-	Callback = function(value)
-		Window:SetOpacity(value, true)
-	end,
-})
-
-Controls.MenuColor = Sections.MenuSettings:AddColorPicker({
-	Text = "Menu Color",
-	Flag = "menu_color",
-	Order = 1,
-	Default = Color3.fromRGB(7, 132, 255),
-	ApplyToTheme = true,
-	Continuous = true,
-})
-
--- Force one post-layout refresh for executors that report UIListLayout content
--- size a frame late. The library also measures the rows directly as a fallback.
-local function refreshMenuSettings()
-	if Controls.MenuOpacity and Controls.MenuOpacity.Row then
-		Controls.MenuOpacity.Row.LayoutOrder = 2
-		Controls.MenuOpacity.Row.Visible = true
-	end
-	Sections.MenuSettings:Refresh()
+local movedSectionIndex = table.find(Tabs.Main.Sections, Sections.MenuSettings)
+if movedSectionIndex then
+	table.remove(Tabs.Main.Sections, movedSectionIndex)
 end
+table.insert(Tabs.Settings.Sections, Sections.MenuSettings)
 
+Sections.MenuSettings.Frame.Parent = Tabs.Settings.Columns[1]
+Sections.MenuSettings.Frame.LayoutOrder = 1
+Sections.MenuSettings.Tab = Tabs.Settings
+Sections.Settings = Sections.MenuSettings
+
+Sections.SettingsExtra = Tabs.Settings:AddSection({Name = "Extra", Column = 2, Order = 1})
+
+Tabs.Main:RefreshCanvas()
+Tabs.Settings:RefreshCanvas()
 refreshMenuSettings()
 task.defer(refreshMenuSettings)
 task.delay(0.1, refreshMenuSettings)
