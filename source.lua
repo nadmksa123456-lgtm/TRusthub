@@ -94,35 +94,29 @@ local SurfaceThemeRoles = {
     "Dim",
 }
 
-local SAFE_FALLBACK = "rbxasset://fonts/families/Roboto.json"
-local INTERFACE_FONT = tostring(environment.TRUST_MENU_FONT_FAMILY or SAFE_FALLBACK)
-local USE_SINGLE_WEIGHT_FONT = environment.TRUST_MENU_FONT_SINGLE_WEIGHT == true
 local TYPOGRAPHY_SCALE = clamp(tonumber(environment.TRUST_MENU_FONT_SCALE) or 1.35, 1, 1.6)
 
-local function interfaceFont(weight)
-	local requestedWeight = USE_SINGLE_WEIGHT_FONT and Enum.FontWeight.SemiBold or weight
-    local ok, font = pcall(function()
-        return Font.new(INTERFACE_FONT, requestedWeight, Enum.FontStyle.Normal)
-    end)
+local function enumFont(fontEnum, fallbackEnum)
+    local ok, font = pcall(Font.fromEnum, fontEnum)
     if ok and font then return font end
-    return Font.new(SAFE_FALLBACK, weight, Enum.FontStyle.Normal)
+    return Font.fromEnum(fallbackEnum or Enum.Font.GothamBold)
 end
 
 local function interfaceTextSize(size)
     return floor(size * TYPOGRAPHY_SCALE + 0.5)
 end
 
--- loader.lua registers the external Agenda One Semi Bold TTF as a local
--- FontFamily. Every typography role intentionally uses that single face.
+-- Use one executor-safe bold face across the interface so small labels never
+-- fall back to a thin weight on Xeno or Volt.
 local Fonts = {
-    Regular = interfaceFont(Enum.FontWeight.Medium),
-    Semibold = interfaceFont(Enum.FontWeight.SemiBold),
-    Bold = interfaceFont(Enum.FontWeight.Bold),
+    Regular = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
+    Semibold = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
+    Bold = enumFont(Enum.Font.GothamBold, Enum.Font.GothamMedium),
 }
 
 local Library = {
     Version = "1.0.0",
-    FontName = tostring(environment.TRUST_MENU_FONT_NAME or "Safe fallback"),
+    FontName = "Gotham Bold",
     FontScale = TYPOGRAPHY_SCALE,
     Theme = Theme,
     Flags = {},

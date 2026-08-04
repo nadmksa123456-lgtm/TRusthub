@@ -126,10 +126,8 @@ print(status[0].Ready, status[0].Path, status[0].Error)
 - `makefolder` اختياري في البيئات التي تنشئ المجلدات تلقائيًا
 - `getcustomasset` أو `getsynasset`
 
-يستخدم المنيو ملف `assets/Agenda-Semibold.ttf` كخطه الرسمي. يقوم `loader.lua`
-بتنزيله إلى مجلد الكاش، ثم يبني `Agenda-One-SemiBold.json` محليًا ويسجله عبر
-`getcustomasset` أو `getsynasset`. إذا لم يدعم الـ Executor الخطوط المحلية، يبقى
-المنيو عاملًا باستخدام الخط الاحتياطي وتظهر رسالة تحذير في الـ console.
+يستخدم المنيو `Gotham Bold` في جميع النصوص، لضمان ظهور الخط بوضوح وبنفس
+النتيجة في Xeno وVolt.
 
 مقياس الخط الافتراضي هو `1.35`. يمكن تغييره قبل تشغيل `template.lua`:
 

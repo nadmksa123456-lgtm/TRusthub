@@ -24,9 +24,6 @@ local remoteBase = trimTrailingSlash(configuredBase or DEFAULT_RAW_BASE)
 
 local localRoot = tostring(environment.TRUST_MENU_ROOT or ".")
 local cacheRoot = tostring(environment.TRUST_MENU_CACHE_ROOT or "TRust-Menu/assets")
-local agendaFontFile = "assets/Agenda-Semibold.ttf"
-local agendaFontCacheFile = joinPath(cacheRoot, "Agenda-Semibold.ttf")
-local agendaFamilyCacheFile = joinPath(cacheRoot, "Agenda-One-SemiBold.json")
 
 local function executorRequest()
 	local direct = environment.request or environment.http_request
@@ -53,7 +50,7 @@ local function httpGet(url)
 		local requestOk, response = pcall(requestFunction, {
 			Url = url,
 			Method = "GET",
-			Headers = {Accept = "application/octet-stream,text/plain,*/*"},
+			Headers = {Accept = "text/plain,*/*"},
 		})
 		if requestOk and type(response) == "table" then
 			local statusCode = tonumber(response.StatusCode or response.Status)
@@ -66,105 +63,6 @@ local function httpGet(url)
 	end
 
 	return nil, tostring(gameBody or "HTTP request failed")
-end
-
-local function environmentFunction(name)
-	local value = environment[name]
-	return type(value) == "function" and value or nil
-end
-
-local function fileExists(path)
-	local isFile = environmentFunction("isfile")
-	if not isFile then return nil end
-
-	local ok, exists = pcall(isFile, path)
-	return ok and exists == true
-end
-
-local function ensureFolder(path)
-	local makeFolder = environmentFunction("makefolder")
-	if not makeFolder or not path or path == "" then return end
-
-	local isFolder = environmentFunction("isfolder")
-	if isFolder then
-		local ok, exists = pcall(isFolder, path)
-		if ok and exists then return end
-	end
-	pcall(makeFolder, path)
-end
-
-local function isTrueTypeFont(data)
-	if type(data) ~= "string" or #data < 1024 then return false end
-
-	local signature = string.sub(data, 1, 4)
-	return signature == "\0\1\0\0"
-		or signature == "OTTO"
-		or signature == "true"
-		or signature == "ttcf"
-end
-
-local function writeExecutorFile(path, data)
-	local writeFile = environmentFunction("writefile")
-	if not writeFile then return false, "writefile is unavailable" end
-
-	ensureFolder(cacheRoot)
-	local ok, message = pcall(writeFile, path, data)
-	if not ok then return false, tostring(message) end
-	return true
-end
-
-local function resolveCustomAsset(path)
-	local resolver = environmentFunction("getcustomasset") or environmentFunction("getsynasset")
-	if not resolver then return nil, "getcustomasset/getsynasset is unavailable" end
-
-	local ok, asset = pcall(resolver, path)
-	if ok and type(asset) == "string" and asset ~= "" then return asset end
-	return nil, tostring(asset or "unable to create custom asset")
-end
-
-local function prepareAgendaFont()
-	if type(environment.TRUST_MENU_FONT_FAMILY) == "string"
-		and environment.TRUST_MENU_FONT_FAMILY ~= "" then
-		return environment.TRUST_MENU_FONT_FAMILY
-	end
-
-	local fontPath = agendaFontCacheFile
-	if fileExists(fontPath) ~= true then
-		local fontUrl = joinPath(remoteBase, agendaFontFile)
-		local fontData, downloadError = httpGet(fontUrl)
-		if not isTrueTypeFont(fontData) then
-			return nil, downloadError or "downloaded Agenda font is not a valid TTF/OTF file"
-		end
-
-		local saved, saveError = writeExecutorFile(fontPath, fontData)
-		if not saved then return nil, saveError end
-	end
-
-	local fontAsset, fontAssetError = resolveCustomAsset(fontPath)
-	if not fontAsset then return nil, fontAssetError end
-
-	local familyData = game:GetService("HttpService"):JSONEncode({
-		name = "Agenda One",
-		faces = {
-			{
-				name = "Semi Bold",
-				weight = 600,
-				style = "normal",
-				assetId = fontAsset,
-			},
-		},
-	})
-
-	local familySaved, familySaveError = writeExecutorFile(agendaFamilyCacheFile, familyData)
-	if not familySaved then return nil, familySaveError end
-
-	local familyAsset, familyAssetError = resolveCustomAsset(agendaFamilyCacheFile)
-	if not familyAsset then return nil, familyAssetError end
-
-	environment.TRUST_MENU_FONT_FAMILY = familyAsset
-	environment.TRUST_MENU_FONT_NAME = "Agenda One Semi Bold"
-	environment.TRUST_MENU_FONT_SINGLE_WEIGHT = true
-	return familyAsset
 end
 
 local function readLocal(fileName)
@@ -237,12 +135,6 @@ if #missingAssets > 0 then
 	warn("[TRust Menu] Some images could not be prepared: " .. table.concat(missingAssets, ", "))
 end
 
-local preparedFont, fontError = prepareAgendaFont()
-if not preparedFont then
-	warn("[TRust Menu] Agenda One Semi Bold could not be loaded; using the safe fallback: "
-		.. tostring(fontError))
-end
-
 local Library = loadModule("source.lua")
 assert(type(Library) == "table", "[TRust Menu] source.lua did not return the library")
 
@@ -250,8 +142,6 @@ Library.Icons = Icons
 Library.AssetBaseUrl = remoteBase
 Library.PreparedAssets = preparedAssets
 Library.MissingAssets = missingAssets
-Library.PreparedFont = preparedFont
-Library.FontError = fontError
 
 function Library:GetIcon(index, forceRefresh)
 	return self.Icons:Resolve(index, forceRefresh == true)
